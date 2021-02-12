@@ -20,10 +20,11 @@ use com.livecode.math
 metadata title is "Knob Widget"
 metadata author is "Paul McClernan (with code from Trevor DeVore)"
 metadata version is "1.0.0"
+metadata preferredSize is "300,300"
 -- public
-private variable mRotateBy          as Number
 private variable mFrequency         as Number
 private variable mSVGPath           as Path
+private variable mSVGCircleBase     as Path
 private variable mColor             as Color
 private variable mIconOrigin        as List
 private variable mIconSize          as Number
@@ -35,7 +36,6 @@ private variable mCenter            as Point
 private variable mWorkingPath       as Path
 private variable mRotation          as Number
 
-property rotateBy           get mRotateBy            set setRotateBy
 property currentRotation    get getRotation		     set setRotation  --- get mCurrentRotation
 property frequency          get mFrequency           set mFrequency
 property iconStyle          get mIconStyle           set setIconStyle
@@ -48,7 +48,7 @@ metadata iconSVGPath.editor is "com.livecode.pi.text"
 metadata iconColor.editor is "com.livecode.pi.color"
 metadata iconColor.section is "Colors"
 metadata iconStyle.editor is "com.livecode.pi.enum"
-metadata iconStyle.options is "circle notch,knob1,cog"
+metadata iconStyle.options is "circle notch,knob1,knob2"
 -- metadata currentRotation.user_visible is "true"
 
 private handler setIconSize(in pSize as Number)
@@ -68,12 +68,6 @@ private handler getRotation() returns Number
 	-- log mCurrentRotation
 	-- log mRotation
 	return mCurrentRotation
-end handler
-
-private handler setRotateBy(in pRotateBy as Number)
-	put pRotateBy into mRotateBy
-	initializationCalculations()
-	redraw all
 end handler
 
 private handler getIconPath() returns String
@@ -118,14 +112,19 @@ private handler setIconStyle(in pStyle as String)
 end handler
 
 private handler _setIconStyle(in pStyle as String)
-	put 10 into mRotateBy
 	put 0.01 into mFrequency
 	put [0.50,0.50] into mIconOrigin
 	put pStyle into mIconStyle
-
+	put path "M118.126,16.67C104.636,5.351,88.215-0.177,71.882-0.176c-20.546,0-40.952,8.75-55.192,25.721 C-8.87,56.006-4.897,101.42,25.564,126.98c13.491,11.32,29.911,16.847,46.244,16.847c20.546,0,40.952-8.75,55.192-25.721 " & \
+	"C152.561,87.645,148.587,42.23,118.126,16.67" into mSVGCircleBase
 
 	if pStyle is "circle notch" then
-		put path "M355.8,176.1c0,48.3-20.3,94.1-52,125.9s-77.6,52-125.9,52S83.8,333.8,52,302S0,224.4,0,176.1C0,117.4,28.6,63.7,75.1,30.8 c23.2-16.5,49-26.6,77.4-30.8v51.6C93.9,63.5,50.8,115.2,50.8,176.1c0,34.4,14.7,67.1,37.3,89.8c22.6,22.6,55.4,37.3,89.8,37.3 s67.3-14.7,90-37.3c22.6-22.6,37.1-55.4,37.1-89.8c0-61-43.1-112.6-101.7-124.5V0c57,8.1,105.6,42.9,132.4,93.7 C349.1,119.3,355.8,146.7,355.8,176.1z" into mSVGPath
+		put path "M38.198,13.797C53.995,4.678,72.805,2.668,89.189,7.031c16.383,4.362,31.656,15.559,40.776,31.354 " &\
+			"c9.119,15.795,11.159,34.587,6.765,50.989c-4.396,16.404-15.559,31.657-31.354,40.777c-19.195,11.082-42.157,11.867-61.695,2.873 " &\
+			"c-9.777-4.471-17.951-11.001-24.687-19.497l16.874-9.742c14.957,16.917,40.001,21.251,59.916,9.753 " &\
+			"c11.25-6.495,19.169-17.477,22.325-29.154c3.123-11.656,1.737-25.158-4.758-36.407c-6.494-11.25-17.514-19.233-29.189-22.39 " &\
+			"C72.504,22.463,59.04,23.915,47.79,30.41C27.842,41.927,19.105,65.764,26.277,87.175L9.403,96.917 " &\
+			"C1.29,76.748,3.495,54.283,15.047,35.928C20.889,26.712,28.584,19.348,38.198,13.797z" into mSVGPath
 	else if pStyle is "knob1" then
 		put path "M118.13,16.67C104.64,5.35,88.22-0.18,71.88-0.18c-20.55,0-40.95,8.75-55.19,25.72C-8.87,56.01-4.9,101.42,25.56,126.98 c13.49,11.32,29.91,16.85,46.24,16.85c20.55,0,40.95-8.75,55.19-25.72C152.56,87.65,148.59,42.23,118.13,16.67z M8.23,77.39" & \
 		"c-1.49-16.99,3.73-33.55,14.7-46.61C35.09,16.28,52.93,7.97,71.88,7.97h0c14.96,0,29.53,5.31,41.01,14.94 c13.07,10.96,21.08,26.36,22.57,43.35c1.49,16.99-3.73,33.55-14.7,46.61c-12.16,14.5-30.01,22.81-48.95,22.81" & \
@@ -136,15 +135,74 @@ private handler _setIconStyle(in pStyle as String)
 		"c-2.09,2.49-5.16,3.93-8.42,3.93c-2.57,0-5.08-0.91-7.06-2.57C27.47,120.74,26.09,118.09,25.83,115.17z M33.41,127.52 c1.3,0.37,2.63,0.57,3.97,0.6c10.61,6.51,22.54,9.72,34.43,9.72c18.84,0,37.55-8.02,50.61-23.58c23.44-27.93,19.79-69.57-8.14-93.01" & \
 		"C101.91,10.87,86.86,5.81,71.88,5.81c-18.84,0-37.55,8.02-50.61,23.58c-21.51,25.63-20.19,62.8,1.75,86.86 c0.19,1.21,0.55,2.39,1.08,3.53C-0.54,95.26-2.74,55.42,20,28.32C32.89,12.96,51.8,4.14,71.88,4.14h0" & \
 		 "c15.86,0,31.29,5.62,43.46,15.84c13.85,11.62,22.34,27.94,23.92,45.95c1.58,18.01-3.96,35.55-15.58,49.4 c-12.89,15.37-31.8,24.18-51.88,24.18C58.08,139.51,44.67,135.28,33.41,127.52z" into mSVGPath
-	else if pStyle is "refresh" then
-		put path "M181.2,15.1V68c0,4.1-3.4,7.6-7.6,7.6h-52.9c-4.1,0-7.6-3.4-7.6-7.6c0-2,0.7-3.8,2.2-5.3l16.3-16.3 c-11.7-10.7-25.4-16.2-41.2-16.2c-21.1,0-40.5,10.9-51.4,28.8c-0.8,1.3-2.9,5.9-6.3,13.8c-0.6,1.8-1.8,2.7-3.5,2.7H5.9 c-2,0-3.8-1.8-3.8-3.8v-0.8C12.4,28.8,47.3,0,90.6,0c23,0,45.5,9.1,62.4,25l15.3-15.2c1.5-1.5,3.3-2.2,5.3-2.2 C177.8,7.6,181.2,11,181.2,15.1z M178.3,109.5c0,0.4,0,0.7-0.1,0.8c-10,42.1-44.9,70.9-88,70.9c-23,0-45.2-9-62.1-25l-15.2,15.2 c-1.5,1.5-3.3,2.2-5.3,2.2c-4.1,0-7.6-3.4-7.6-7.6v-52.9c0-4.1,3.4-7.6,7.6-7.6h52.9c4.1,0,7.6,3.4,7.6,7.6c0,2-0.7,3.8-2.2,5.3 l-16.2,16.2C60.8,145.1,75.4,151,90.6,151c21.1,0,40.5-10.9,51.4-28.8c0.8-1.3,2.9-5.9,6.3-13.8c0.6-1.8,1.8-2.7,3.5-2.7h22.7 C176.5,105.7,178.3,107.5,178.3,109.5z" into mSVGPath
-	else if pStyle is "cog" then
-		put path "M322.8,138.5v46.7c0,3.4-2.5,6.9-5.9,7.6l-38.9,5.9c-2.7,7.6-5.5,13.9-8.2,19.1c4.8,6.9,12.4,16.6,22.5,29 c1.5,1.7,2.1,3.4,2.1,5.3c0,1.9-0.6,3.4-1.9,4.8c-7.6,10.3-34.5,37.6-40.6,37.6c-1.7,0-3.6-0.6-5.5-1.9l-29-22.7 c-6.1,3.2-12.6,5.9-19.1,8c-2.3,19.1-4.2,32.2-6.1,39.1c-1.1,4-3.6,5.9-7.6,5.9h-46.7c-4,0-7.4-2.7-7.6-6.3l-5.9-38.7 c-6.9-2.3-13.2-4.8-18.9-7.8l-29.6,22.5c-1.5,1.3-3.2,1.9-5.3,1.9c-1.9,0-3.8-0.8-5.3-2.3c-17.7-16-29.2-27.7-34.7-35.3 c-1.1-1.5-1.5-2.9-1.5-4.8c0-1.7,0.6-3.4,1.7-4.8c2.1-2.9,5.7-7.6,10.7-14.1c5-6.3,8.8-11.1,11.3-14.7c-3.8-6.9-6.7-13.9-8.6-20.8 l-38.5-5.7c-3.6-0.6-6.1-4-6.1-7.6v-46.7c0-3.4,2.5-6.9,5.7-7.6l39.1-5.9c1.9-6.5,4.6-12.8,8.2-19.3c-5.7-8-13-17.7-22.5-29 c-1.5-1.7-2.1-3.4-2.1-5c0-1.5,0.6-2.9,1.9-4.8c7.4-10.1,34.5-37.6,40.6-37.6c1.9,0,3.6,0.6,5.5,2.1l29,22.5 c6.1-3.2,12.6-5.9,19.1-8c2.3-19.1,4.2-32.2,6.1-39.1c1.1-4,3.6-5.9,7.6-5.9h46.7c4,0,7.4,2.7,7.6,6.3l5.9,38.7 c6.9,2.3,13.2,4.8,18.9,7.8L247,30.3c1.3-1.3,2.9-1.9,5-1.9c1.9,0,3.6,0.6,5.3,2.1c18.1,16.6,29.6,28.6,34.7,35.7 c1.1,1.1,1.5,2.7,1.5,4.6c0,1.7-0.6,3.4-1.7,4.8c-2.1,2.9-5.7,7.6-10.7,13.9c-5,6.5-8.8,11.3-11.3,14.9c3.6,6.9,6.5,13.9,8.6,20.6 l38.5,5.9C320.3,131.6,322.8,134.9,322.8,138.5z M199.5,199.5c10.5-10.5,15.8-23.1,15.8-38c0-29.6-24.2-53.8-53.8-53.8 s-53.8,24.2-53.8,53.8s24.2,53.8,53.8,53.8C176.3,215.2,189,210,199.5,199.5z" into mSVGPath
+	 else if pStyle is "knob2" then
+ 		put path "M138.96,45.44c-4.38-11.08-11.53-20.96-20.65-28.61C101.39,2.63,78.36-3.06,56.77,1.59c-20,4.31-37.54,17.27-47.58,35.09 " & \
+		"C0.25,52.56-2.27,71.62,2.08,89.31c4.61,18.72,16.8,35.06,33.42,44.81c18.78,11.03,42.07,12.95,62.4,5.13 " & \
+		"c18.7-7.19,33.88-22.27,41.18-40.93C145.69,81.45,145.62,62.29,138.96,45.44z M139.1,60.28c0.41,2.33,0.69,4.69,0.85,7.05 " & \
+		"l-7.77,0.49c-0.14-2.04-0.38-4.06-0.73-6.08L139.1,60.28z M138.83,58.85l-7.65,1.46c-0.39-2-0.89-3.99-1.49-5.94l7.4-2.41 " & \
+		"C137.8,54.23,138.38,56.52,138.83,58.85z M136.67,50.56l-7.4,2.41c-0.64-1.94-1.38-3.85-2.22-5.72l7.05-3.32 " & \
+		"C135.08,46.1,135.93,48.31,136.67,50.56z M133.47,42.61l-7.05,3.31c-0.88-1.84-1.86-3.64-2.93-5.4l6.58-4.17 " & \
+		"C131.32,38.39,132.45,40.48,133.47,42.61z M129.31,35.11l-6.58,4.17c-1.11-1.71-2.3-3.37-3.59-4.99l6-4.96 " & \
+		"C126.63,31.2,128.03,33.12,129.31,35.11z M119.34,23c1.73,1.67,3.35,3.4,4.86,5.21l-6,4.96c-1.31-1.56-2.71-3.05-4.2-4.5L119.34,23" & \
+		"z M116.01,19.97c-0.01-0.01-0.03-0.02-0.05-0.04C115.98,19.95,116,19.96,116.01,19.97z M115.81,19.81 " & \
+		"c0.85,0.71,1.67,1.44,2.47,2.18l-5.33,5.68c-1.51-1.39-3.09-2.7-4.73-3.93l4.58-6.3C113.82,18.2,114.83,18.98,115.81,19.81z " & \
+		" M111.62,16.57l-4.58,6.3c-1.67-1.19-3.41-2.3-5.19-3.31l3.75-6.82C107.67,13.9,109.68,15.19,111.62,16.57z M104.32,12.03 " & \
+		"l-3.75,6.82c-1.81-0.97-3.67-1.86-5.56-2.64l2.87-7.24C100.08,9.88,102.23,10.9,104.32,12.03z M96.51,8.44l-2.87,7.24 " & \
+		"c-1.92-0.74-3.87-1.39-5.85-1.92l1.94-7.55C92.03,6.83,94.29,7.59,96.51,8.44z M81.3,4.51c2.36,0.33,4.7,0.79,7.01,1.35l-1.94,7.54 " & \
+		"c-1.99-0.49-4.01-0.89-6.05-1.17L81.3,4.51z M72.73,3.88c2.39,0.02,4.76,0.18,7.12,0.45l-0.98,7.73c-2.04-0.23-4.09-0.37-6.15-0.39 " & \
+		"V3.88z M71.27,3.88v7.79c-2.07,0.03-4.12,0.15-6.15,0.38l-0.98-7.73C66.49,4.05,68.87,3.91,71.27,3.88z M62.69,4.52l0.98,7.73 " & \
+		"c-2.04,0.28-4.06,0.67-6.05,1.15l-1.94-7.54C57.99,5.3,60.33,4.85,62.69,4.52z M54.27,6.22l1.94,7.54 " & \
+		"c-1.99,0.54-3.94,1.18-5.86,1.92l-2.87-7.24C49.7,7.58,51.96,6.84,54.27,6.22z M46.12,8.97l2.87,7.24 " & \
+		"c-1.9,0.78-3.76,1.65-5.57,2.63l-3.75-6.82C41.76,10.89,43.91,9.87,46.12,8.97z M38.39,12.74l3.75,6.82 " & \
+		"c-1.78,1.02-3.51,2.12-5.19,3.31l-4.58-6.3C34.32,15.19,36.33,13.91,38.39,12.74z M31.2,17.43l4.58,6.3 " & \
+		"c-1.64,1.23-3.21,2.55-4.72,3.95L25.72,22C27.47,20.38,29.3,18.85,31.2,17.43z M24.65,23l5.33,5.68c-1.46,1.42-2.87,2.91-4.2,4.49 " & \
+		"l-6-4.96C21.32,26.37,22.95,24.64,24.65,23z M18.88,29.35l6,4.96c-1.29,1.62-2.49,3.28-3.59,4.98l-6.57-4.17 " & \
+		"C15.98,33.15,17.37,31.22,18.88,29.35z M13.92,36.35l6.58,4.17c-1.08,1.76-2.06,3.56-2.94,5.39l-7.05-3.32 " & \
+		"C11.52,40.47,12.66,38.39,13.92,36.35z M9.91,43.93l7.05,3.31c-0.84,1.88-1.59,3.78-2.23,5.72l-7.4-2.41 " & \
+		"C8.06,48.32,8.93,46.11,9.91,43.93z M6.86,51.95l7.41,2.41c-0.6,1.96-1.09,3.95-1.48,5.95l-7.65-1.46 " & \
+		"C5.6,56.52,6.16,54.22,6.86,51.95z M4.89,60.28l7.65,1.46c-0.35,2.02-0.59,4.04-0.73,6.08l-7.77-0.49 " & \
+		"C4.2,64.97,4.48,62.62,4.89,60.28z M3.95,68.79l7.77,0.49c-0.09,2.04-0.07,4.08,0.04,6.12L4,75.88 " & \
+		"C3.86,73.52,3.85,71.16,3.95,68.79z M4.09,77.34l7.77-0.49c0.16,2.03,0.42,4.05,0.79,6.06L5,84.37C4.57,82.04,4.28,79.7,4.09,77.34z " & \
+		"M5.3,85.8l7.65-1.46c0.39,1.86,0.86,3.7,1.42,5.52l-1.73,1l-5.19,2.99C6.57,91.22,5.86,88.52,5.3,85.8z M13.08,104.42l-1.83-8 " & \
+		"l27.66-13.47l5.61,9.43L19.08,109.5L13.08,104.42z M40.71,109.29c-1.62-1.36-3.14-2.82-4.55-4.36c0.01-0.01,0.02-0.02,0.03-0.03 " & \
+		"c3.92-3.34,7.85-6.68,11.77-10.02c0.69-0.59,1.38-1.18,2.07-1.77c0.33-0.29,0.2-0.29-0.04-0.67c-1.36-2.19-2.73-4.38-4.09-6.58 " & \
+		"c-1.5-2.41-3-4.82-4.5-7.23c-0.07-0.11-0.54-1.02-0.66-0.97c-0.67,0.27-1.34,0.55-2.01,0.82c-4.62,1.88-9.24,3.77-13.86,5.65 " & \
+		"c-1.56-6.13-1.95-12.54-1.09-18.81c2.92-21.49,20.5-38.82,41.98-41.58c10.92-1.4,22.15,0.98,31.55,6.7 " & \
+		"c9,5.48,16.12,13.88,19.97,23.7c3.92,10,4.45,21.27,1.43,31.59c-3.02,10.34-9.58,19.53-18.32,25.82 " & \
+		"c-8.42,6.06-18.72,9.27-29.09,9.13C60.17,120.52,49.24,116.45,40.71,109.29C49.46,116.63,39.09,107.93,40.71,109.29z M20.12,116.19 " & \
+		"l6-4.96c1.31,1.53,2.71,3,4.19,4.42l-5.33,5.68C23.26,119.69,21.64,117.97,20.12,116.19z M28.19,124.21 " & \
+		"C27.89,123.96,28.01,124.06,28.19,124.21c-0.73-0.62-1.44-1.25-2.14-1.89l5.33-5.68c1.5,1.37,3.07,2.65,4.71,3.86l-4.58,6.3 " & \
+		"C30.38,125.98,29.27,125.12,28.19,124.21C28.45,124.43,28.83,124.75,28.19,124.21z M32.69,127.67l4.58-6.3 " & \
+		"c1.67,1.17,3.39,2.25,5.15,3.24l-3.75,6.82C36.62,130.28,34.62,129.03,32.69,127.67z M39.95,132.14l3.75-6.82 " & \
+		"c1.8,0.95,3.63,1.81,5.51,2.58l-2.87,7.24C44.16,134.25,42.03,133.25,39.95,132.14z M47.71,135.66l2.87-7.24 " & \
+		"c1.9,0.72,3.82,1.36,5.78,1.88l-1.94,7.54C52.14,137.24,49.91,136.5,47.71,135.66z M62.77,139.53c-2.34-0.32-4.65-0.77-6.93-1.33 " & \
+		"l1.94-7.54c1.97,0.48,3.96,0.87,5.97,1.14L62.77,139.53z M71.27,140.14c-2.36-0.03-4.71-0.18-7.04-0.44l0.98-7.73 " & \
+		"c2.01,0.23,4.04,0.36,6.07,0.38V140.14z M71.96,125.55c-15.12-0.04-29.75-6.58-39.86-17.83c1-0.69,1.99-1.37,2.99-2.06 " & \
+		"c0.28-0.19,0.18-0.22,0.48,0.1c0.5,0.53,1,1.06,1.52,1.57c1.11,1.1,2.28,2.16,3.49,3.15c4.3,3.51,9.2,6.29,14.42,8.19 " & \
+		"c10.14,3.69,21.38,3.97,31.68,0.79c9.95-3.07,18.78-9.31,25.04-17.63c6.64-8.83,10.16-19.75,9.92-30.8 " & \
+		"c-0.22-10.5-3.75-20.81-10.14-29.16c-6.63-8.67-16.09-15.01-26.63-17.84c-10.31-2.77-21.42-2.12-31.34,1.84 " & \
+		"c-9.77,3.9-18.14,10.94-23.72,19.86c-4.31,6.89-6.85,14.81-7.38,22.91c-0.28,4.34,0,8.71,0.85,12.98c0.05,0.27,0.74,2.92,0.66,2.96 " & \
+		"c-0.36,0.18-0.72,0.36-1.07,0.54c-0.83,0.41-1.65,0.83-2.48,1.24c-3.3-11.95-2.38-24.92,2.7-36.23 " & \
+		"c5.07-11.3,14.14-20.75,25.28-26.19c11.09-5.41,23.91-6.88,35.93-4.04c12.23,2.9,23.24,10.13,30.72,20.23 " & \
+		"c7.4,10,11.26,22.74,10.38,35.18c-0.87,12.39-5.82,24.12-14.3,33.23C101.08,119.33,86.67,125.55,71.96,125.55z M72.73,140.14v-7.79 " & \
+		"c2.04-0.03,4.07-0.14,6.07-0.37l0.98,7.72C77.45,139.97,75.1,140.11,72.73,140.14z M81.22,139.51l-0.97-7.73 " & \
+		"c2.02-0.28,4.01-0.65,5.97-1.13l1.94,7.54C85.88,138.75,83.57,139.19,81.22,139.51z M89.58,137.84l-1.94-7.54 " & \
+		"c1.96-0.53,3.89-1.16,5.79-1.87l2.87,7.24C94.1,136.51,91.86,137.24,89.58,137.84z M97.66,135.15l-2.87-7.25 " & \
+		"c1.88-0.77,3.72-1.62,5.51-2.57l3.76,6.83C101.98,133.27,99.84,134.26,97.66,135.15z M105.33,131.44l-3.75-6.83 " & \
+		"c1.77-0.99,3.49-2.07,5.15-3.24l4.58,6.3C109.38,129.03,107.38,130.29,105.33,131.44z M112.49,126.82l-4.58-6.3 " & \
+		"c1.63-1.2,3.19-2.5,4.7-3.87l5.33,5.68C116.2,123.92,114.38,125.42,112.49,126.82z M119.03,121.34l-5.33-5.68 " & \
+		"c1.46-1.4,2.85-2.88,4.18-4.43l6,4.96C122.34,118,120.72,119.72,119.03,121.34z M124.81,115.07l-6-4.96 " & \
+		"c1.3-1.59,2.5-3.23,3.61-4.91l6.57,4.17C127.71,111.31,126.32,113.22,124.81,115.07z M129.78,108.13l-6.57-4.17 " & \
+		"c1.09-1.74,2.08-3.52,2.97-5.33l7.05,3.32C132.2,104.05,131.05,106.12,129.78,108.13z M133.85,100.63l-7.05-3.32 " & \
+		"c0.86-1.86,1.61-3.75,2.27-5.67l7.41,2.4C135.72,96.28,134.85,98.47,133.85,100.63z M136.94,92.67l-7.41-2.41 " & \
+		"c0.62-1.95,1.14-3.92,1.55-5.91l7.65,1.46C138.26,88.12,137.66,90.4,136.94,92.67z M139,84.37l-7.65-1.46 " & \
+		 "c0.37-2.01,0.63-4.03,0.79-6.06l7.77,0.49C139.73,79.69,139.42,82.04,139,84.37z M132.25,75.4c0.11-2.04,0.11-4.08,0.02-6.12 " & \
+		 "l7.77-0.49c0.11,2.36,0.12,4.73-0.02,7.1L132.25,75.4z" into mSVGPath
 	end if
 end handler
 
 public handler OnCreate()
-	_setIconStyle("circle notch")
+	_setIconStyle("knob1")
 	put color [0/255, 0/255, 0/255] into mColor
 	put [0.50,0.50] into mIconOrigin
 	put 80 into mIconSize
@@ -154,7 +212,6 @@ end handler
 public handler OnSave(out rProperties as Array)
 		put the empty array into rProperties
 		put colorToString(mColor, true) into rProperties["color"]
-		put mRotateBy into rProperties["rotateBy"]
 		put mFrequency into rProperties["frequency"]
 		put the instructions of mSVGPath into rProperties["svgPath"]
 		put mIconOrigin into rProperties["iconOrigin"]
@@ -166,7 +223,6 @@ end handler
 public handler OnLoad(in pProperties as Array)
 	put path pProperties["svgPath"] into mSVGPath
 	put stringToColor(pProperties["color"]) into mColor
-	put pProperties["rotateBy"] into mRotateBy
 	put pProperties["frequency"] into mFrequency
 	put pProperties["iconOrigin"] into mIconOrigin
 	put pProperties["iconSize"] into mIconSize
@@ -189,45 +245,60 @@ end handler
 -- public handler OnVisibilityChanged(in pVisible as Boolean)
 -- end handler
 
-	public handler OnMouseUp()
-		if the mouse position is within my bounds then
-			post "mouseUp" with [the click button] -- to my script object
-		else
-			post "mouseRelease" with [the click button] -- formatint needed until dp-2
-		end if
-		redraw all
-	end handler
+public handler OnMouseUp()
+	if the mouse position is within my bounds then
+		post "mouseUp" with [the click button] -- to my script object
+	else
+		post "mouseRelease" with [the click button] -- formatint needed until dp-2
+	end if
+	redraw all
+end handler
 
-	public handler OnMouseMove()
-		post "mouseMove" to my script object -- to my script object
-		redraw all
-	end handler
+public handler OnMouseMove()
+	post "mouseMove" to my script object -- to my script object
+	redraw all
+end handler
 
-	public handler OnMouseCancel()
-		post "mouseRelease" to my script object with [the click button] -- to my script object
-	end handler
+public handler OnMouseCancel()
+	post "mouseRelease" to my script object with [the click button] -- to my script object
+end handler
 
 
-	public handler OnMouseDown()
-		post "mouseDown" to my script object with [the click button] -- to my script object
-		redraw all
-	end handler
+public handler OnMouseDown()
+	post "mouseDown" to my script object with [the click button] -- to my script object
+	redraw all
+end handler
 
-	private handler initializationCalculations()
-		-- Always start with the shape at original position.
-		put mSVGPath into mWorkingPath
+private handler initializationCalculations()
+	-- Always start with the shape at original position.
+	put mSVGPath into mWorkingPath
 
-		put preparePathForRotation(mWorkingPath, mIconOrigin, rectangle [0,0,mIconSize,mIconSize], my rectangle) into mCenter
+	put preparePathForRotation(mSVGCircleBase, mIconOrigin, rectangle [0,0,mIconSize,mIconSize], my rectangle) into mCenter
+	put preparePathForRotation(mWorkingPath, mIconOrigin, rectangle [0,0,mIconSize,mIconSize], my rectangle) into mCenter
 
-		put 0 into mRotation
-	end handler
+	put 0 into mRotation
+end handler
 
 	----------
 	-- called whenever LiveCode needs to redraw the widget
-	public handler OnPaint()
-		set the paint of this canvas to solid paint with mColor
-		fill mWorkingPath on this canvas
-	end handler
+public handler OnPaint()
+	set the antialias of this canvas to true
+	variable mEffect as Effect
+	put outer shadow effect into mEffect --> DROPSHADOW (fix)
+	-- set inner shadow effect of mEffect
+	set the color of mEffect to color [0.7,0.7,0.7]
+	set the angle of mEffect to 90
+	set the spread of mEffect to 0
+	set the size of mEffect to 20
+	set the distance of mEffect to 7
+	set the color of mEffect to color [0.25,0.25,0.25]
+	begin layer with mEffect on this canvas
+		set the paint of this canvas to solid paint with color [1.0, 1.0, 1.0, 1.0]
+		fill mSVGCircleBase on this canvas
+	end layer on this canvas
+	set the paint of this canvas to solid paint with mColor
+	fill mWorkingPath on this canvas
+end handler
 
 
 	public handler OnClose()
