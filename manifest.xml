@@ -13,26 +13,56 @@
   <requires name="com.livecode.string"/>
   <requires name="com.livecode.arithmetic"/>
   <requires name="com.livecode.logic"/>
-  <requires name="com.livecode.typeconvert"/>
   <requires name="com.livecode.type"/>
   <requires name="com.livecode.array"/>
   <requires name="com.livecode.engine"/>
-  <requires name="com.livecode.char"/>
-  <requires name="com.livecode.byte"/>
   <requires name="com.livecode.mathfoundation"/>
+  <requires name="com.livecode.typeconvert"/>
   <metadata key="preferredSize">300,300</metadata>
-  <property name="currentRotation" get="number" set="number"/>
-  <property name="frequency" get="number" set="number"/>
-  <property name="iconStyle" get="string" set="string"/>
+  <property name="fillColor" get="string" set="string"/>
+  <metadata key="fillColor.editor">com.livecode.pi.colorwithalpha</metadata>
+  <metadata key="fillColor.label">Fill color</metadata>
+  <metadata key="fillColor.section">Colors</metadata>
+  <property name="outterShadowAngle" get="number" set="number"/>
+  <metadata key="outterShadowAngle.editor">com.livecode.pi.number</metadata>
+  <metadata key="outterShadowAngle.label">Outter Shadow angle</metadata>
+  <metadata key="outterShadowAngle.step">1</metadata>
+  <metadata key="outterShadowAngle.default">105</metadata>
+  <metadata key="outterShadowAngle.min">0</metadata>
+  <metadata key="outterShadowAngle.max">359</metadata>
+  <metadata key="outterShadowAngle.section">Effects</metadata>
+  <property name="outterShadowDistance" get="number" set="number"/>
+  <metadata key="outterShadowDistance.editor">com.livecode.pi.number</metadata>
+  <metadata key="outterShadowDistance.label">Outter Shadow distance</metadata>
+  <metadata key="outterShadowDistance.step">1</metadata>
+  <metadata key="outterShadowDistance.default">7</metadata>
+  <metadata key="outterShadowDistance.min">0</metadata>
+  <metadata key="outterShadowDistance.max">255</metadata>
+  <metadata key="outterShadowDistance.section">Effects</metadata>
+  <property name="outterShadowColor" get="string" set="string"/>
+  <metadata key="outterShadowColor.editor">com.livecode.pi.color</metadata>
+  <metadata key="outterShadowColor.label">Outter Shadow color</metadata>
+  <metadata key="outterShadowColor.section">Effects</metadata>
+  <property name="outterShadowSize" get="number" set="number"/>
+  <metadata key="outterShadowSize.editor">com.livecode.pi.number</metadata>
+  <metadata key="outterShadowSize.section">Effects</metadata>
+  <metadata key="outterShadowSize.label">Outter Shadow size</metadata>
+  <metadata key="outterShadowSize.step">1</metadata>
+  <metadata key="outterShadowSize.default">15</metadata>
+  <metadata key="outterShadowSize.min">0</metadata>
+  <metadata key="outterShadowSize.max">255</metadata>
+  <metadata key="outterShadowSize.section">Effects</metadata>
   <property name="iconSVGPath" get="string" set="string"/>
-  <property name="iconColor" get="string" set="string"/>
-  <property name="iconOrigin" get="string" set="string"/>
-  <property name="iconSize" get="number" set="number"/>
   <metadata key="iconSVGPath.editor">com.livecode.pi.text</metadata>
-  <metadata key="iconColor.editor">com.livecode.pi.color</metadata>
-  <metadata key="iconColor.section">Colors</metadata>
+  <property name="SVGPathColor" get="string" set="string"/>
+  <metadata key="SVGPathColor.editor">com.livecode.pi.color</metadata>
+  <metadata key="SVGPathColor.section">Colors</metadata>
+  <metadata key="SVGPathColor.label">SVG Path color</metadata>
+  <property name="iconStyle" get="string" set="string"/>
   <metadata key="iconStyle.editor">com.livecode.pi.enum</metadata>
   <metadata key="iconStyle.options">circle notch,knob1,knob2</metadata>
+  <property name="iconSize" get="number" set="number"/>
+  <property name="currentRotation" get="number" set="number"/>
   <handler name="OnCreate" parameters="" return="any"/>
   <handler name="OnSave" parameters="out array" return="any"/>
   <handler name="OnLoad" parameters="in array" return="any"/>

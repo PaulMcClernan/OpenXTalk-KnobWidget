@@ -4,3 +4,10 @@
 ._community.livecode.paulmcclernan.knob.lcb
 ._Demo.livecode
 *.lci
+LICENSE
+module.2.lcm
+support/._defaultscript.livecodescript
+api.lcdoc
+LICENSE
+manifest.xml
+manifest.xml

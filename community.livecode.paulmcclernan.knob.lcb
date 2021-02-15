@@ -1,5 +1,6 @@
-/*
+/**
 
+Description:
 This widget will rotate a path around a point of origin. You can choose from one of the included Font Awesome paths
 (circle notch, cog, pulse, spinner, or refresh) by setting the <iconStyle> property. Or you can assign your own path to the iconSVGPath property.
 You specify the size of the path by setting the <iconSize> property. The path will always be centered in the middle of the widget.
@@ -7,8 +8,31 @@ You specify the size of the path by setting the <iconSize> property. The path wi
 You can change the amount of rotation that occurs as well as the frequency of animation by setting the
 <rotateBy> and 'frequency' properties.
 
-*/
+Name: mouseMove
 
+Type: message
+
+Name: mouseDown
+
+Type: message
+
+Name: mouseUp
+
+Type: message
+
+Name: backgroundColor
+
+Type: property
+
+Name: hiliteColor
+
+Type: property
+
+Name: shadow
+
+Type: property
+
+*/
 widget community.livecode.paulmcclernan.knob
 
 use com.livecode.canvas
@@ -22,58 +46,102 @@ metadata author is "Paul McClernan (with code from Trevor DeVore)"
 metadata version is "1.0.0"
 metadata preferredSize is "300,300"
 -- public
-private variable mFrequency         as Number
 private variable mSVGPath           as Path
 private variable mSVGCircleBase     as Path
 private variable mColor             as Color
 private variable mIconOrigin        as List
 private variable mIconSize          as Number
 private variable mIconStyle         as String
-private variable mCurrentRotation   as Number
-
--- private
 private variable mCenter            as Point
 private variable mWorkingPath       as Path
 private variable mRotation          as Number
 
-property currentRotation    get getRotation		     set setRotation  --- get mCurrentRotation
-property frequency          get mFrequency           set mFrequency
-property iconStyle          get mIconStyle           set setIconStyle
+private variable mFillColor	as Color
+property fillColor   get getFillColor  set setFillColor
+metadata fillColor.editor  is "com.livecode.pi.colorwithalpha" -- "com.livecode.pi.color"
+metadata fillColor.label is "Fill color"
+metadata fillColor.section is "Colors"
+private handler setFillColor(in pColor as String)
+   put stringToColor(pColor) into mFillColor
+   redraw all
+end handler
+private handler getFillColor() returns String
+   return colorToString(mFillColor, true)
+end handler
+
+-- private variable mShadow as Boolean
+--property outterShadow	 get mShadow	  set mShadow
+--metadata outterShadow.label is "Outer Shadow"
+---metadata outterShadow.section is "Effects"
+
+private variable mOutterShadowAngle as Number
+property outterShadowAngle get mOutterShadowAngle  set setOutterShadowAngle
+metadata outterShadowAngle.editor is "com.livecode.pi.number"
+metadata outterShadowAngle.label is "Outter Shadow angle"
+metadata outterShadowAngle.step is "1"
+metadata outterShadowAngle.default is "105"
+metadata outterShadowAngle.min is "0"
+metadata outterShadowAngle.max is "359"
+metadata outterShadowAngle.section is "Effects"
+private handler setOutterShadowAngle(in pNumber as Number)
+   put pNumber into mOutterShadowAngle
+   redraw all
+end handler
+
+--private variable mShadowBlendMode
+--property shadowBlendMode	 get mShadowBlendMode	  set mShadowBlendMode
+--metadata shadowBlendMode.section is "Effects"
+
+private variable mOutterShadowDistance	as Number
+property outterShadowDistance	 get mOutterShadowDistance	  set setOutterShadowDistance
+metadata outterShadowDistance.editor is "com.livecode.pi.number"
+metadata outterShadowDistance.label is "Outter Shadow distance"
+metadata outterShadowDistance.step is "1"
+metadata outterShadowDistance.default is "7"
+metadata outterShadowDistance.min is "0"
+metadata outterShadowDistance.max is "255"
+metadata outterShadowDistance.section is "Effects"
+private handler setOutterShadowDistance(in pNumber as Number) returns nothing
+   put pNumber into mOutterShadowDistance
+   redraw all
+end handler
+
+private variable mOutterShadowColor	as Color
+property outterShadowColor get getOutterShadowColor  set setOutterShadowColor
+metadata outterShadowColor.editor is "com.livecode.pi.color"
+metadata outterShadowColor.label is "Outter Shadow color"
+metadata outterShadowColor.section is "Effects"
+private handler setOutterShadowColor(in pColor as String) returns nothing
+   put stringToColor(pColor) into mOutterShadowColor
+   redraw all
+end handler
+private handler getOutterShadowColor() returns String
+   return colorToString(mOutterShadowColor,false)
+end handler
+--private variable mShadowFilter
+--property shadowFilter	 get mShadowFilter	  set mShadowFilter
+--metadata shadowFilter.section is "Effects"
+
+private variable mOutterShadowSize	as Number
+property outterShadowSize	 get mOutterShadowSize	  set setOutterShadowSize
+metadata outterShadowSize.editor is "com.livecode.pi.number"
+metadata outterShadowSize.section is "Effects"
+metadata outterShadowSize.label is "Outter Shadow size"
+metadata outterShadowSize.step is "1"
+metadata outterShadowSize.default is "15"
+metadata outterShadowSize.min is "0"
+metadata outterShadowSize.max is "255"
+metadata outterShadowSize.section is "Effects"
+private handler setOutterShadowSize(in pNumber as Number) returns nothing
+   put pNumber into mOutterShadowSize
+   redraw all
+end handler
+
 property iconSVGPath        get getIconPath          set setIconPath
-property iconColor        	 get getColor             set setColor
-property iconOrigin         get getIconOrigin        set setIconOrigin
-property iconSize           get mIconSize            set setIconSize
-
 metadata iconSVGPath.editor is "com.livecode.pi.text"
-metadata iconColor.editor is "com.livecode.pi.color"
-metadata iconColor.section is "Colors"
-metadata iconStyle.editor is "com.livecode.pi.enum"
-metadata iconStyle.options is "circle notch,knob1,knob2"
--- metadata currentRotation.user_visible is "true"
-
-private handler setIconSize(in pSize as Number)
-	put pSize into mIconSize
-	initializationCalculations()
-	redraw all
-end handler
-
-private handler setRotation(in pRotation as Number)
-	initializationCalculations()
-	calculateRotatedPath(mWorkingPath, pRotation, mCenter, true)
-	redraw all
-end handler
-	--   set the currentRotation of me to (the currentRotation of me)+10
-
-private handler getRotation() returns Number
-	-- log mCurrentRotation
-	-- log mRotation
-	return mCurrentRotation
-end handler
-
 private handler getIconPath() returns String
 	return the instructions of mSVGPath
 end handler
-
 private handler setIconPath(in pPath as String)
 	put path pPath into mSVGPath
 	put "custom" into mIconStyle
@@ -81,29 +149,39 @@ private handler setIconPath(in pPath as String)
 	redraw all
 end handler
 
-private handler getColor() returns String
+property SVGPathColor        	 get getSVGPathColor             set setSVGPathColor
+metadata SVGPathColor.editor is "com.livecode.pi.color"
+metadata SVGPathColor.section is "Colors"
+metadata SVGPathColor.label is "SVG Path color"
+private handler getSVGPathColor() returns String
 	return colorToString(mColor, false)
 end handler
-
-private handler setColor(in pColor as String)
+private handler setSVGPathColor(in pColor as String)
 	put stringToColor(pColor) into mColor
 	redraw all
 end handler
 
-private handler getIconOrigin() returns String
-	return (element 1 of mIconOrigin) formatted as string & "," & (element 2 of mIconOrigin) formatted as string
+property iconStyle          get mIconStyle           set setIconStyle
+metadata iconStyle.editor is "com.livecode.pi.enum"
+metadata iconStyle.options is "circle notch,knob1,knob2"
+-- metadata currentRotation.user_visible is "true"
+
+property iconSize           get mIconSize            set setIconSize
+private handler setIconSize(in pSize as Number)
+	put pSize into mIconSize
+	initializationCalculations()
+	redraw all
 end handler
 
-private handler setIconOrigin(in pPoint as String)
-	variable tList as List
-	split pPoint by "," into tList
-	put tList parsed as list of number into tList
-	if the number of elements in tList is 2 then
-		put tList into mIconOrigin
-		initializationCalculations()
-		redraw all
-	end if
+private variable mCurrentRotation   as Number
+property currentRotation    get mCurrentRotation		     set setRotation  --- get mCurrentRotation
+private handler setRotation(in pRotation as Number)
+	initializationCalculations()
+	calculateRotatedPath(mWorkingPath, pRotation, mCenter, true)
+   put pRotation into mCurrentRotation
+	redraw all
 end handler
+	--   set the currentRotation of me to (the currentRotation of me)+10
 
 private handler setIconStyle(in pStyle as String)
 	_setIconStyle(pStyle)
@@ -112,7 +190,6 @@ private handler setIconStyle(in pStyle as String)
 end handler
 
 private handler _setIconStyle(in pStyle as String)
-	put 0.01 into mFrequency
 	put [0.50,0.50] into mIconOrigin
 	put pStyle into mIconStyle
 	put path "M118.126,16.67C104.636,5.351,88.215-0.177,71.882-0.176c-20.546,0-40.952,8.75-55.192,25.721 C-8.87,56.006-4.897,101.42,25.564,126.98c13.491,11.32,29.911,16.847,46.244,16.847c20.546,0,40.952-8.75,55.192-25.721 " & \
@@ -203,43 +280,80 @@ end handler
 
 public handler OnCreate()
 	_setIconStyle("knob1")
-	put color [0/255, 0/255, 0/255] into mColor
+	variable tEffect as Effect
+	put color [0.5, 0.5, 0.5] into mColor
 	put [0.50,0.50] into mIconOrigin
-	put 80 into mIconSize
+	put 100 into mIconSize
 	put 90 into mRotation
+	put color [0.9, 0.9, 0.9, 1.0] into mFillColor
+	-- put outer shadow effect into tEffect
+
+   put color [0.1, 0.1, 0.1] into mOutterShadowColor
+	put 105 into mOutterShadowAngle -- 90
+	-- put the angle of tEffect into mOutterShadowAngle -- 90
+   -- put the spread of tEffect into mShadowSpread -- 0
+	-- put 0 into mShadowSpread -- 0
+	-- put the size of tEffect into mOutterShadowSize -- 20
+   put 20 into mOutterShadowSize -- 20
+	-- put the distance of tEffect into mOutterShadowDistance
+	put 7 into mOutterShadowDistance
+
+	-- put the color of my shadow paint into mOutterShadowColor
+	-- put color [0.25,0.25,0.25] into mOutterShadowColor
+
+	-- set the angle of mEffect to 90
+	-- set the spread of mEffect to 0
+	-- set the size of mEffect to 20
+	-- set the distance of mEffect to 7
+
 end handler
 
 public handler OnSave(out rProperties as Array)
-		put the empty array into rProperties
-		put colorToString(mColor, true) into rProperties["color"]
-		put mFrequency into rProperties["frequency"]
-		put the instructions of mSVGPath into rProperties["svgPath"]
-		put mIconOrigin into rProperties["iconOrigin"]
-		put mIconSize into rProperties["iconSize"]
-		put mIconStyle into rProperties["iconStyle"]
-		put mCurrentRotation into rProperties["currentRotation"]
+	put the empty array into rProperties
+	put colorToString(mColor, true) into rProperties["SVGPathColor"]
+   put colorToString(mFillColor, true) into rProperties["fillColor"]
+
+	put the instructions of mSVGPath into rProperties["svgPath"]
+	-- put mIconOrigin into rProperties["iconOrigin"]
+	put mIconSize into rProperties["iconSize"]
+	put mIconStyle into rProperties["iconStyle"]
+	put mCurrentRotation into rProperties["currentRotation"]
+
+	put colorToString(mOutterShadowColor, false) into rProperties["shadowColor"]
+	-- put "source over" into tProps["blend mode"]
+	-- put mShadowSpread into rProperties["effectSpread"]
+	put mOutterShadowSize into rProperties["shadowSize"]
+	put mOutterShadowDistance into rProperties["shadowDistance"]
+	put mOutterShadowAngle into rProperties["shadowAngle"]
+
+	redraw all
 end handler
 
 public handler OnLoad(in pProperties as Array)
 	put path pProperties["svgPath"] into mSVGPath
-	put stringToColor(pProperties["color"]) into mColor
-	put pProperties["frequency"] into mFrequency
-	put pProperties["iconOrigin"] into mIconOrigin
+	put stringToColor(pProperties["SVGPathColor"]) into mColor
+   put stringToColor(pProperties["fillColor"]) into mFillColor
+	-- put pProperties["iconOrigin"] into mIconOrigin
 	put pProperties["iconSize"] into mIconSize
 	put pProperties["iconStyle"] into mIconStyle
 	put pProperties["currentRotation"] into mCurrentRotation
+   put stringToColor(pProperties["shadowColor"]) into mOutterShadowColor
+	-- put pProperties["DropShaowSpread"] into mShadowSpread
+	put pProperties["shadowSize"] into mOutterShadowSize
+	put pProperties["shadowDistance"] into mOutterShadowDistance
+	put pProperties["shadowAngle"] into mOutterShadowAngle
+
+	redraw all
 end handler
 
+public handler OnOpen()
+	initializationCalculations()
+	-- schedule timer in mFrequency seconds
+end handler
 
-	public handler OnOpen()
-		initializationCalculations()
-		-- schedule timer in mFrequency seconds
-	end handler
-
-
-	public handler OnGeometryChanged()
-		initializationCalculations()
-	end handler
+public handler OnGeometryChanged()
+	initializationCalculations()
+end handler
 
 -- this message doesn't seem to be firing yet
 -- public handler OnVisibilityChanged(in pVisible as Boolean)
@@ -249,13 +363,14 @@ public handler OnMouseUp()
 	if the mouse position is within my bounds then
 		post "mouseUp" with [the click button] -- to my script object
 	else
-		post "mouseRelease" with [the click button] -- formatint needed until dp-2
+		post "mouseRelease" with [the click button]
 	end if
 	redraw all
 end handler
 
 public handler OnMouseMove()
-	post "mouseMove" to my script object -- to my script object
+	variable tPosition as Point
+	post "mouseMove" to my script object with [the x of the mouse position,the y of the mouse position]-- to my script object
 	redraw all
 end handler
 
@@ -283,215 +398,210 @@ end handler
 	-- called whenever LiveCode needs to redraw the widget
 public handler OnPaint()
 	set the antialias of this canvas to true
-	variable mEffect as Effect
-	put outer shadow effect into mEffect --> DROPSHADOW (fix)
-	-- set inner shadow effect of mEffect
-	set the color of mEffect to color [0.7,0.7,0.7]
-	set the angle of mEffect to 90
-	set the spread of mEffect to 0
-	set the size of mEffect to 20
-	set the distance of mEffect to 7
-	set the color of mEffect to color [0.25,0.25,0.25]
-	begin layer with mEffect on this canvas
-		set the paint of this canvas to solid paint with color [1.0, 1.0, 1.0, 1.0]
+	variable tProps as Array
+	put the empty array into tProps
+
+	-- put colorToString(mOutterShadowColor,false) into tProps["color"]
+   put mOutterShadowColor into tProps["color"]
+   put mOutterShadowAngle into tProps["angle"]
+
+	-- put "source over" into tProps["blend mode"]
+	put 0 into tProps["spread"]
+	put mOutterShadowSize into tProps["size"]
+	put mOutterShadowDistance into tProps["distance"]
+
+	variable tEffect as Effect
+	put outer shadow effect with properties tProps into tEffect
+	-- put outer shadow effect into tEffect --> shadow (fix)
+   --set the color of tEffect to mOutterShadowColor -- color [0.0,1.0,0.0] --  color [0.7,0.7,0.7] -- tEffectColor
+   -- set the angle of tEffect to mOutterShadowAngle -- 90
+	-- set the spread of tEffect to mShadowSpread
+	--set the size of tEffect to mOutterShadowSize
+	--set the distance of tEffect to mOutterShadowDistance
+
+	begin layer with tEffect on this canvas
+		set the paint of this canvas to solid paint with mFillColor-- color [1.0, 1.0, 1.0, 1.0]
 		fill mSVGCircleBase on this canvas
 	end layer on this canvas
 	set the paint of this canvas to solid paint with mColor
 	fill mWorkingPath on this canvas
 end handler
 
+public handler OnClose()
+	cancel timer
+end handler
 
-	public handler OnClose()
-		cancel timer
-	end handler
+----------
+-- this handler is called when the timer scheduled with 'schedule timer' fires
+--public handler OnTimer()
+--end handler
+----------
 
-	----------
-	-- this handler is called when the timer scheduled with 'schedule timer' fires
-	--public handler OnTimer()
-	--end handler
-	----------
-
-	-- this handler returns the amount of time until the seconds change
-	--handler computeNextTimer() returns Number
-		-- use the 'execute script' command
-		--execute script "return 1 - (the long seconds - round(the long seconds - 0.5))"
-		--return the result
-	--end handler
-
+-- this handler returns the amount of time until the seconds change
+--handler computeNextTimer() returns Number
+	-- use the 'execute script' command
+	--execute script "return 1 - (the long seconds - round(the long seconds - 0.5))"
+	--return the result
+--end handler
 
 	-- Translated from some Skia code
-	public handler scaleAndMaintainAspectRatioTransform(in pSrcBounds as Rectangle, in pDestBounds as Rectangle, in pConstraintBounds as Rectangle) returns Transform
-		// Prepare values for matrix transformations
-		variable isLarger as Boolean
-		variable sX as Number
-		variable sY as Number
+public handler scaleAndMaintainAspectRatioTransform(in pSrcBounds as Rectangle, in pDestBounds as Rectangle, in pConstraintBounds as Rectangle) returns Transform
+	// Prepare values for matrix transformations
+	variable isLarger as Boolean
+	variable sX as Number
+	variable sY as Number
 
-		put false into isLarger
-		put the width of pDestBounds / the width of pSrcBounds into sX
-		put the height of pDestBounds / the height of pSrcBounds into sY
+	put false into isLarger
+	put the width of pDestBounds / the width of pSrcBounds into sX
+	put the height of pDestBounds / the height of pSrcBounds into sY
 
-		if sX > sY then
-			put true into isLarger
-			put sY into sX
-		else
-			put sX into sY
-		end if
+	if sX > sY then
+		put true into isLarger
+		put sY into sX
+	else
+		put sX into sY
+	end if
 
-		variable tX as Number
-		variable tY as Number
+	variable tX as Number
+	variable tY as Number
 
-		put the left of pDestBounds - (the left of pSrcBounds*sX) into tX
-		put the top of pDestBounds - (the top of pSrcBounds*sY) into tY
+	put the left of pDestBounds - (the left of pSrcBounds*sX) into tX
+	put the top of pDestBounds - (the top of pSrcBounds*sY) into tY
 
-		variable tDiff as Number
+	variable tDiff as Number
 
-		if isLarger then
-			put the width of pConstraintBounds - (the width of pSrcBounds*sY) into tDiff
-		else
-			put the height of pConstraintBounds - (the height of pSrcBounds*sY) into tDiff
-		end if
+	if isLarger then
+		put the width of pConstraintBounds - (the width of pSrcBounds*sY) into tDiff
+	else
+		put the height of pConstraintBounds - (the height of pSrcBounds*sY) into tDiff
+	end if
 
-		// align center
-		divide tDiff by 2
+	// align center
+	divide tDiff by 2
 
-		if isLarger then
-			add tDiff to tX
-		else
-			add tDiff to tY
-		end if
+	if isLarger then
+		add tDiff to tX
+	else
+		add tDiff to tY
+	end if
 
-		// create transformation matrix and apply
-		variable tTransform as Transform
-		put transform with matrix [sX, 0, 0, sY, tX, tY] into tTransform
+	// create transformation matrix and apply
+	variable tTransform as Transform
+	put transform with matrix [sX, 0, 0, sY, tX, tY] into tTransform
 
-		return tTransform
-	end handler
+	return tTransform
+end handler
 
-	-- Needed until dp-2
-	handler FormatInt(in pNumber as Number) returns String
-		variable tNumberString as String
+private handler colorToString(in pColor as Color, in pIncludeAlpha as Boolean) returns String
+	variable tColor as String
 
-		put pNumber formatted as string into tNumberString
+	put the rounded of ((the red of pColor) * 255) into tColor
+	put "," & the rounded of ((the green of pColor) * 255) after tColor
+	put "," & the rounded of ((the blue of pColor) * 255) after tColor
 
-		if "." is in tNumberString then
-			variable tDotOffset
-			put the first offset of "." in tNumberString into tDotOffset
-			delete char tDotOffset to (the number of chars in tNumberString) of tNumberString
-		end if
+	if pIncludeAlpha then
+		put "," & the rounded of ((the alpha of pColor) * 255) after tColor
+	end if
 
-		return tNumberString
-	end handler
+	return tColor
+end handler
 
-	private handler colorToString(in pColor as Color, in pIncludeAlpha as Boolean) returns String
-		variable tColor as String
+----------
+-- this handler converts a String of numbers to an RGBA color
+private handler stringToColor(in pString as String) returns Color
+variable tRed as Real
+variable tGreen as Real
+variable tBlue as Real
+variable tAlpha as Real
 
-		put FormatInt(the rounded of ((the red of pColor) * 255)) into tColor
-		put "," & FormatInt(the rounded of ((the green of pColor) * 255)) after tColor
-		put "," & FormatInt(the rounded of ((the blue of pColor) * 255)) after tColor
+variable tComponentList as List
+split pString by "," into tComponentList
 
-		if pIncludeAlpha then
-			put "," & FormatInt(the rounded of ((the alpha of pColor) * 255)) after tColor
-		end if
+variable tComponentCount
+put the number of elements in tComponentList into tComponentCount
+if tComponentCount is not 3 and tComponentCount is not 4 then
+	// Invalid number of components detected
+	throw "Invalid color"
+end if
 
-		return tColor
-	end handler
+put (element 1 of tComponentList) parsed as number into tRed
+put (element 2 of tComponentList) parsed as number into tGreen
+put (element 3 of tComponentList) parsed as number into tBlue
 
-	----------
-	-- this handler converts a String of numbers to an RGBA color
-	private handler stringToColor(in pString as String) returns Color
-		variable tRed as Real
-		variable tGreen as Real
-		variable tBlue as Real
-		variable tAlpha as Real
+if tComponentCount is 4 then
+	put (element 4 of tComponentList) parsed as number into tAlpha
+else
+	put 255 into tAlpha
+end if
 
-		variable tComponentList as List
-		split pString by "," into tComponentList
+return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
+end handler
 
-		variable tComponentCount
-		put the number of elements in tComponentList into tComponentCount
-		if tComponentCount is not 3 and tComponentCount is not 4 then
-			// Invalid number of components detected
-			throw "Invalid color"
-		end if
-
-		put (element 1 of tComponentList) parsed as number into tRed
-		put (element 2 of tComponentList) parsed as number into tGreen
-		put (element 3 of tComponentList) parsed as number into tBlue
-
-		if tComponentCount is 4 then
-			put (element 4 of tComponentList) parsed as number into tAlpha
-		else
-			put 255 into tAlpha
-		end if
-
-		return color [ tRed/255, tGreen/255, tBlue/255, tAlpha/255 ]
-	end handler
-
-	-- Very useful article: http://docs.rainmeter.net/tips/transformation-matrix-guide
-   public handler calculateRotatedPath(inout pPath as Path, in pRotation as Number, in pCenter as Point, in pRotateClockwise as Boolean)
-      variable tTransform as Transform
-      put rotatedPathTransformation(pRotation, pCenter, pRotateClockwise) into tTransform
-      transform pPath by tTransform
-   end handler
+-- Very useful article: http://docs.rainmeter.net/tips/transformation-matrix-guide
+public handler calculateRotatedPath(inout pPath as Path, in pRotation as Number, in pCenter as Point, in pRotateClockwise as Boolean)
+variable tTransform as Transform
+put rotatedPathTransformation(pRotation, pCenter, pRotateClockwise) into tTransform
+transform pPath by tTransform
+end handler
 
 
-	  public handler rotatedPathTransformation(in pRotation as Number, in pCenter as Point, in pRotateClockwise as Boolean) returns Transform
-	     variable tX as Number
-	     variable tY as Number
-	     variable tOriginX as Number
-	     variable tOriginY as Number
-	     variable tMatrix as List
-	     variable tA as Number
-	     variable tB as Number
-	     variable tC as Number
-	     variable tD as Number
+public handler rotatedPathTransformation(in pRotation as Number, in pCenter as Point, in pRotateClockwise as Boolean) returns Transform
+  variable tX as Number
+  variable tY as Number
+  variable tOriginX as Number
+  variable tOriginY as Number
+  variable tMatrix as List
+  variable tA as Number
+  variable tB as Number
+  variable tC as Number
+  variable tD as Number
 
-	     -- Clockwise: sin for B, -sin for C
-	     -- Counterclockwise: -sin for B, sin for C
-	     variable tAngle as Number
-	     put (pRotation mod 360)/360*2*pi into tAngle
+  -- Clockwise: sin for B, -sin for C
+  -- Counterclockwise: -sin for B, sin for C
+  variable tAngle as Number
+  put (pRotation mod 360)/360*2*pi into tAngle
 
-	     put cos(tAngle) into tA -- scale the x
+  put cos(tAngle) into tA -- scale the x
 
-	     if pRotateClockwise then
-	        put sin(tAngle) into tB -- scale the y
-	        put -sin(tAngle) into tC -- skew the x
-	     else
-	        put -sin(tAngle) into tB -- scale the y
-	        put sin(tAngle) into tC -- skew the x
-	     end if
-	     put cos(tAngle) into tD -- skew the y
-	     put the x of pCenter into tOriginX
-	     put the y of pCenter into tOriginY
+  if pRotateClockwise then
+     put sin(tAngle) into tB -- scale the y
+     put -sin(tAngle) into tC -- skew the x
+  else
+     put -sin(tAngle) into tB -- scale the y
+     put sin(tAngle) into tC -- skew the x
+  end if
+  put cos(tAngle) into tD -- skew the y
+  put the x of pCenter into tOriginX
+  put the y of pCenter into tOriginY
 
-	     put tOriginX - tOriginX*tA - tOriginY*tC into tX
-	     put tOriginY - tOriginX*tB - tOriginY*tD into tY
+  put tOriginX - tOriginX*tA - tOriginY*tC into tX
+  put tOriginY - tOriginX*tB - tOriginY*tD into tY
 
-	     variable tTransform as Transform
-	     put transform with matrix [tA,tB,tC,tD,tX,tY] into tTransform
+  variable tTransform as Transform
+  put transform with matrix [tA,tB,tC,tD,tX,tY] into tTransform
 
-	     return tTransform
-	  end handler
+  return tTransform
+end handler
 
 
-	  -- mIconOrigin Element 1 is percent of icon width that represents center X (e.g. 0.5). Element 2 is percent of icon height that represents center Y (e.g. 0.5).
-	  -- pDestBounds Rectangle to constrain the path to.
-	  -- pConstraintBounds The rect to center the path in.
-	  public handler preparePathForRotation(inout xPath as Path, in pIconOrgin as List, in pDestBounds as Rectangle, in pConstraintBounds as Rectangle) returns Point
-	     transform xPath by scaleAndMaintainAspectRatioTransform(the bounding box of xPath, pDestBounds, pConstraintBounds)
-	     -- Reset to 0,0
-	     translate xPath by [- the x of the bounding box of xPath, \
-	                                   - the y of the bounding box of xPath]
+-- mIconOrigin Element 1 is percent of icon width that represents center X (e.g. 0.5). Element 2 is percent of icon height that represents center Y (e.g. 0.5).
+-- pDestBounds Rectangle to constrain the path to.
+-- pConstraintBounds The rect to center the path in.
+public handler preparePathForRotation(inout xPath as Path, in pIconOrgin as List, in pDestBounds as Rectangle, in pConstraintBounds as Rectangle) returns Point
+  transform xPath by scaleAndMaintainAspectRatioTransform(the bounding box of xPath, pDestBounds, pConstraintBounds)
+  -- Reset to 0,0
+  translate xPath by [- the x of the bounding box of xPath, \
+                                - the y of the bounding box of xPath]
 
-	     -- Find center point to rotate around and center path
-	     variable tCenterX as Number
-	     variable tCenterY as Number
+  -- Find center point to rotate around and center path
+  variable tCenterX as Number
+  variable tCenterY as Number
 
-	     put (the width of the bounding box of xPath * element 1 of pIconOrgin) into tCenterX
-	     put (the height of the bounding box of xPath * element 2 of pIconOrgin) into tCenterY
-	     translate xPath by [the width of pConstraintBounds/2-tCenterX, the height of pConstraintBounds/2-tCenterY]
-	     return point [(the left of the bounding box of xPath) + tCenterX, \
-	                       (the top of the bounding box of xPath) + tCenterY]
-	  end handler
+  put (the width of the bounding box of xPath * element 1 of pIconOrgin) into tCenterX
+  put (the height of the bounding box of xPath * element 2 of pIconOrgin) into tCenterY
+  translate xPath by [the width of pConstraintBounds/2-tCenterX, the height of pConstraintBounds/2-tCenterY]
+  return point [(the left of the bounding box of xPath) + tCenterX, \
+                    (the top of the bounding box of xPath) + tCenterY]
+end handler
 
 end widget
