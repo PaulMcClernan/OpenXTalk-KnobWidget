@@ -360,27 +360,97 @@ end handler
 -- end handler
 
 public handler OnMouseUp()
+   put nothing into mPrevMouseH
+   put nothing into mPrevMouseV
+   put false into mMouseDown
 	if the mouse position is within my bounds then
 		post "mouseUp" with [the click button] -- to my script object
 	else
 		post "mouseRelease" with [the click button]
 	end if
+
 	redraw all
 end handler
 
+private variable mPrevMouseH as optional Number
+private variable mPrevMouseV as optional Number
+private variable mMouseDown as optional Boolean
 public handler OnMouseMove()
-	variable tPosition as Point
-	post "mouseMove" to my script object with [the x of the mouse position,the y of the mouse position]-- to my script object
-	redraw all
+   if mMouseDown is not nothing and mMouseDown is true then
+      variable tMouseH as Number
+      variable tMouseV as Number
+      variable tMouseLoc as List
+      -- variable tListOfNum as List
+      execute script "return mouseLoc()"
+      -- put the result into tMouseLocStr
+      split the result by "," into tMouseLoc
+      parse tMouseLoc as list of number into tMouseLoc
+      put tMouseLoc[1] into tMouseH
+      put tMouseLoc[2] into tMouseV
+      -- put the x of the mouse position / my pixel scale into tMouseH
+      -- put the y of the mouse position / my pixel scale into tMouseV
+      variable tDiffH as Number
+      variable tDiffV as Number
+      put 0 into tDiffH
+      put 0 into tDiffV
+   -- if mPrevMouseH is not nothing then
+      if (tMouseH > mPrevMouseH) or (tMouseV > mPrevMouseV) then
+         put mPrevMouseV - tMouseH into tDiffH
+         put mPrevMouseH - tMouseV into tDiffV --  / my pixel scale
+         add (tDiffV - tDiffH) to mCurrentRotation
+         if mCurrentRotation > 290 then
+            put 290 into mCurrentRotation
+         end if
+         calculateRotatedPath(mWorkingPath, mCurrentRotation, mCenter, true)
+      -- if mPrevMouseH < tMouseH then -- moving left
+      --   log "right"
+      --else if mPrevMouseH > tMouseH then -- moving right
+      --   log "left"
+      -- end if
+      else if (tMouseH < mPrevMouseH) or (tMouseV < mPrevMouseV) then
+         put tMouseH - mPrevMouseH into tDiffH --/ my pixel scale
+         put tMouseV - mPrevMouseV into tDiffV
+         subtract (tDiffV - tDiffH) from mCurrentRotation
+         if mCurrentRotation < 0 then
+            put 0 into mCurrentRotation
+         end if
+         calculateRotatedPath(mWorkingPath, mCurrentRotation, mCenter, true)
+         -- log [ mCurrentRotation - (tDiffV - tDiffH)]
+      --if tMouseV < mPrevMouseV then -- moving up
+      --   log "up"
+      --else if tMouseV > mPrevMouseV then -- moving down
+      --   log "down"
+      --end if
+      end if
+      log mCurrentRotation
+      put tMouseH into mPrevMouseH
+      put tMouseV into mPrevMouseV
+      redraw all
+   end if
 end handler
 
 public handler OnMouseCancel()
+   put nothing into mPrevMouseH
+   put nothing into mPrevMouseV
+   put false into mMouseDown
 	post "mouseRelease" to my script object with [the click button] -- to my script object
 end handler
 
-
 public handler OnMouseDown()
-	post "mouseDown" to my script object with [the click button] -- to my script object
+   variable tMouseH as Number
+   variable tMouseV as Number
+   variable tMouseLoc as List
+   -- variable tListOfNum as List
+   execute script "return mouseLoc()"
+   -- put the result into tMouseLocStr
+   split the result by "," into tMouseLoc
+   parse tMouseLoc as list of number into tMouseLoc
+   put tMouseLoc[1] into mPrevMouseH
+   put tMouseLoc[2] into mPrevMouseV
+   --put the x of the mouse position / my pixel scale into mPrevMouseH
+   --put the y of the mouse position / my pixel scale into mPrevMouseV
+   put true into mMouseDown
+   post "mouseDown" to my script object with [the click button] -- to my script object
 	redraw all
 end handler
 
@@ -539,9 +609,9 @@ end handler
 
 -- Very useful article: http://docs.rainmeter.net/tips/transformation-matrix-guide
 public handler calculateRotatedPath(inout pPath as Path, in pRotation as Number, in pCenter as Point, in pRotateClockwise as Boolean)
-variable tTransform as Transform
-put rotatedPathTransformation(pRotation, pCenter, pRotateClockwise) into tTransform
-transform pPath by tTransform
+   variable tTransform as Transform
+   put rotatedPathTransformation(pRotation, pCenter, pRotateClockwise) into tTransform
+   transform pPath by tTransform
 end handler
 
 
