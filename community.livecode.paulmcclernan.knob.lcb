@@ -8,6 +8,10 @@ You specify the size of the path by setting the <iconSize> property. The path wi
 You can change the amount of rotation that occurs as well as the frequency of animation by setting the
 <rotateBy> and 'frequency' properties.
 
+Name: knobTurned
+
+Type: message
+
 Name: mouseMove
 
 Type: message
@@ -20,6 +24,10 @@ Name: mouseUp
 
 Type: message
 
+Name: mouseRelease
+
+Type: message
+
 Name: backgroundColor
 
 Type: property
@@ -28,7 +36,7 @@ Name: hiliteColor
 
 Type: property
 
-Name: shadow
+Name: outerShadowColor
 
 Type: property
 
@@ -39,7 +47,6 @@ use com.livecode.canvas
 use com.livecode.widget
 use com.livecode.engine
 use com.livecode.math
--- use community.livecode.trevordevore.widgetHelpers
 
 metadata title is "Knob Widget"
 metadata author is "Paul McClernan (with code from Trevor DeVore)"
@@ -54,7 +61,7 @@ private variable mIconSize          as Number
 private variable mIconStyle         as String
 private variable mCenter            as Point
 private variable mWorkingPath       as Path
-private variable mRotation          as Number
+-- private variable mRotation          as Number
 
 private variable mFillColor	as Color
 property fillColor   get getFillColor  set setFillColor
@@ -70,21 +77,21 @@ private handler getFillColor() returns String
 end handler
 
 -- private variable mShadow as Boolean
---property outterShadow	 get mShadow	  set mShadow
---metadata outterShadow.label is "Outer Shadow"
----metadata outterShadow.section is "Effects"
+--property outerShadow	 get mShadow	  set mShadow
+--metadata outerShadow.label is "Outer Shadow"
+---metadata outerShadow.section is "Effects"
 
-private variable mOutterShadowAngle as Number
-property outterShadowAngle get mOutterShadowAngle  set setOutterShadowAngle
-metadata outterShadowAngle.editor is "com.livecode.pi.number"
-metadata outterShadowAngle.label is "Outter Shadow angle"
-metadata outterShadowAngle.step is "1"
-metadata outterShadowAngle.default is "105"
-metadata outterShadowAngle.min is "0"
-metadata outterShadowAngle.max is "359"
-metadata outterShadowAngle.section is "Effects"
-private handler setOutterShadowAngle(in pNumber as Number)
-   put pNumber into mOutterShadowAngle
+private variable mOuterShadowAngle as Number
+property outerShadowAngle get mOuterShadowAngle  set setOuterShadowAngle
+metadata outerShadowAngle.editor is "com.livecode.pi.number"
+metadata outerShadowAngle.label is "Outer Shadow angle"
+metadata outerShadowAngle.step is "1"
+metadata outerShadowAngle.default is "105"
+metadata outerShadowAngle.min is "0"
+metadata outerShadowAngle.max is "359"
+metadata outerShadowAngle.section is "Effects"
+private handler setOuterShadowAngle(in pNumber as Number)
+   put pNumber into mOuterShadowAngle
    redraw all
 end handler
 
@@ -92,48 +99,48 @@ end handler
 --property shadowBlendMode	 get mShadowBlendMode	  set mShadowBlendMode
 --metadata shadowBlendMode.section is "Effects"
 
-private variable mOutterShadowDistance	as Number
-property outterShadowDistance	 get mOutterShadowDistance	  set setOutterShadowDistance
-metadata outterShadowDistance.editor is "com.livecode.pi.number"
-metadata outterShadowDistance.label is "Outter Shadow distance"
-metadata outterShadowDistance.step is "1"
-metadata outterShadowDistance.default is "7"
-metadata outterShadowDistance.min is "0"
-metadata outterShadowDistance.max is "255"
-metadata outterShadowDistance.section is "Effects"
-private handler setOutterShadowDistance(in pNumber as Number) returns nothing
-   put pNumber into mOutterShadowDistance
+private variable mOuterShadowDistance	as Number
+property outerShadowDistance	 get mOuterShadowDistance	  set setOuterShadowDistance
+metadata outerShadowDistance.editor is "com.livecode.pi.number"
+metadata outerShadowDistance.label is "Outer Shadow distance"
+metadata outerShadowDistance.step is "1"
+metadata outerShadowDistance.default is "7"
+metadata outerShadowDistance.min is "0"
+metadata outerShadowDistance.max is "255"
+metadata outerShadowDistance.section is "Effects"
+private handler setOuterShadowDistance(in pNumber as Number) returns nothing
+   put pNumber into mOuterShadowDistance
    redraw all
 end handler
 
-private variable mOutterShadowColor	as Color
-property outterShadowColor get getOutterShadowColor  set setOutterShadowColor
-metadata outterShadowColor.editor is "com.livecode.pi.color"
-metadata outterShadowColor.label is "Outter Shadow color"
-metadata outterShadowColor.section is "Effects"
-private handler setOutterShadowColor(in pColor as String) returns nothing
-   put stringToColor(pColor) into mOutterShadowColor
+private variable mOuterShadowColor	as Color
+property outerShadowColor get getOuterShadowColor  set setOuterShadowColor
+metadata outerShadowColor.editor is "com.livecode.pi.color"
+metadata outerShadowColor.label is "Outer Shadow color"
+metadata outerShadowColor.section is "Effects"
+private handler setOuterShadowColor(in pColor as String) returns nothing
+   put stringToColor(pColor) into mOuterShadowColor
    redraw all
 end handler
-private handler getOutterShadowColor() returns String
-   return colorToString(mOutterShadowColor,false)
+private handler getOuterShadowColor() returns String
+   return colorToString(mOuterShadowColor,false)
 end handler
 --private variable mShadowFilter
 --property shadowFilter	 get mShadowFilter	  set mShadowFilter
 --metadata shadowFilter.section is "Effects"
 
-private variable mOutterShadowSize	as Number
-property outterShadowSize	 get mOutterShadowSize	  set setOutterShadowSize
-metadata outterShadowSize.editor is "com.livecode.pi.number"
-metadata outterShadowSize.section is "Effects"
-metadata outterShadowSize.label is "Outter Shadow size"
-metadata outterShadowSize.step is "1"
-metadata outterShadowSize.default is "15"
-metadata outterShadowSize.min is "0"
-metadata outterShadowSize.max is "255"
-metadata outterShadowSize.section is "Effects"
-private handler setOutterShadowSize(in pNumber as Number) returns nothing
-   put pNumber into mOutterShadowSize
+private variable mOuterShadowSize	as Number
+property outerShadowSize	 get mOuterShadowSize	  set setOuterShadowSize
+metadata outerShadowSize.editor is "com.livecode.pi.number"
+metadata outerShadowSize.section is "Effects"
+metadata outerShadowSize.label is "Outer Shadow size"
+metadata outerShadowSize.step is "1"
+metadata outerShadowSize.default is "15"
+metadata outerShadowSize.min is "0"
+metadata outerShadowSize.max is "255"
+metadata outerShadowSize.section is "Effects"
+private handler setOuterShadowSize(in pNumber as Number) returns nothing
+   put pNumber into mOuterShadowSize
    redraw all
 end handler
 
@@ -174,20 +181,22 @@ private handler setIconSize(in pSize as Number)
 end handler
 
 private variable mCurrentRotation   as Number
-property currentRotation    get mCurrentRotation		     set setRotation  --- get mCurrentRotation
+property currentRotation    get mCurrentRotation		     set setRotation
 private handler setRotation(in pRotation as Number)
 	initializationCalculations()
 	calculateRotatedPath(mWorkingPath, pRotation, mCenter, true)
    put pRotation into mCurrentRotation
 	redraw all
 end handler
-	--   set the currentRotation of me to (the currentRotation of me)+10
 
 private handler setIconStyle(in pStyle as String)
 	_setIconStyle(pStyle)
 	initializationCalculations()
 	redraw all
 end handler
+
+private variable mMaxRotatiom   as Number
+property maxRotation    get mMaxRotatiom		     set mMaxRotatiom
 
 private handler _setIconStyle(in pStyle as String)
 	put [0.50,0.50] into mIconOrigin
@@ -202,6 +211,7 @@ private handler _setIconStyle(in pStyle as String)
 			"c11.25-6.495,19.169-17.477,22.325-29.154c3.123-11.656,1.737-25.158-4.758-36.407c-6.494-11.25-17.514-19.233-29.189-22.39 " &\
 			"C72.504,22.463,59.04,23.915,47.79,30.41C27.842,41.927,19.105,65.764,26.277,87.175L9.403,96.917 " &\
 			"C1.29,76.748,3.495,54.283,15.047,35.928C20.889,26.712,28.584,19.348,38.198,13.797z" into mSVGPath
+      put 240 into mMaxRotatiom
 	else if pStyle is "knob1" then
 		put path "M118.13,16.67C104.64,5.35,88.22-0.18,71.88-0.18c-20.55,0-40.95,8.75-55.19,25.72C-8.87,56.01-4.9,101.42,25.56,126.98 c13.49,11.32,29.91,16.85,46.24,16.85c20.55,0,40.95-8.75,55.19-25.72C152.56,87.65,148.59,42.23,118.13,16.67z M8.23,77.39" & \
 		"c-1.49-16.99,3.73-33.55,14.7-46.61C35.09,16.28,52.93,7.97,71.88,7.97h0c14.96,0,29.53,5.31,41.01,14.94 c13.07,10.96,21.08,26.36,22.57,43.35c1.49,16.99-3.73,33.55-14.7,46.61c-12.16,14.5-30.01,22.81-48.95,22.81" & \
@@ -212,7 +222,8 @@ private handler _setIconStyle(in pStyle as String)
 		"c-2.09,2.49-5.16,3.93-8.42,3.93c-2.57,0-5.08-0.91-7.06-2.57C27.47,120.74,26.09,118.09,25.83,115.17z M33.41,127.52 c1.3,0.37,2.63,0.57,3.97,0.6c10.61,6.51,22.54,9.72,34.43,9.72c18.84,0,37.55-8.02,50.61-23.58c23.44-27.93,19.79-69.57-8.14-93.01" & \
 		"C101.91,10.87,86.86,5.81,71.88,5.81c-18.84,0-37.55,8.02-50.61,23.58c-21.51,25.63-20.19,62.8,1.75,86.86 c0.19,1.21,0.55,2.39,1.08,3.53C-0.54,95.26-2.74,55.42,20,28.32C32.89,12.96,51.8,4.14,71.88,4.14h0" & \
 		 "c15.86,0,31.29,5.62,43.46,15.84c13.85,11.62,22.34,27.94,23.92,45.95c1.58,18.01-3.96,35.55-15.58,49.4 c-12.89,15.37-31.8,24.18-51.88,24.18C58.08,139.51,44.67,135.28,33.41,127.52z" into mSVGPath
-	 else if pStyle is "knob2" then
+       put 290 into mMaxRotatiom
+    else if pStyle is "knob2" then
  		put path "M138.96,45.44c-4.38-11.08-11.53-20.96-20.65-28.61C101.39,2.63,78.36-3.06,56.77,1.59c-20,4.31-37.54,17.27-47.58,35.09 " & \
 		"C0.25,52.56-2.27,71.62,2.08,89.31c4.61,18.72,16.8,35.06,33.42,44.81c18.78,11.03,42.07,12.95,62.4,5.13 " & \
 		"c18.7-7.19,33.88-22.27,41.18-40.93C145.69,81.45,145.62,62.29,138.96,45.44z M139.1,60.28c0.41,2.33,0.69,4.69,0.85,7.05 " & \
@@ -275,6 +286,7 @@ private handler _setIconStyle(in pStyle as String)
 		"c0.62-1.95,1.14-3.92,1.55-5.91l7.65,1.46C138.26,88.12,137.66,90.4,136.94,92.67z M139,84.37l-7.65-1.46 " & \
 		 "c0.37-2.01,0.63-4.03,0.79-6.06l7.77,0.49C139.73,79.69,139.42,82.04,139,84.37z M132.25,75.4c0.11-2.04,0.11-4.08,0.02-6.12 " & \
 		 "l7.77-0.49c0.11,2.36,0.12,4.73-0.02,7.1L132.25,75.4z" into mSVGPath
+       put 240 into mMaxRotatiom
 	end if
 end handler
 
@@ -284,22 +296,22 @@ public handler OnCreate()
 	put color [0.5, 0.5, 0.5] into mColor
 	put [0.50,0.50] into mIconOrigin
 	put 100 into mIconSize
-	put 90 into mRotation
+	-- put 90 into mRotation
 	put color [0.9, 0.9, 0.9, 1.0] into mFillColor
 	-- put outer shadow effect into tEffect
 
-   put color [0.1, 0.1, 0.1] into mOutterShadowColor
-	put 105 into mOutterShadowAngle -- 90
-	-- put the angle of tEffect into mOutterShadowAngle -- 90
+   put color [0.1, 0.1, 0.1] into mOuterShadowColor
+	put 105 into mOuterShadowAngle -- 90
+	-- put the angle of tEffect into mOuterShadowAngle -- 90
    -- put the spread of tEffect into mShadowSpread -- 0
 	-- put 0 into mShadowSpread -- 0
-	-- put the size of tEffect into mOutterShadowSize -- 20
-   put 20 into mOutterShadowSize -- 20
-	-- put the distance of tEffect into mOutterShadowDistance
-	put 7 into mOutterShadowDistance
+	-- put the size of tEffect into mOuterShadowSize -- 20
+   put 20 into mOuterShadowSize -- 20
+	-- put the distance of tEffect into mOuterShadowDistance
+	put 7 into mOuterShadowDistance
 
-	-- put the color of my shadow paint into mOutterShadowColor
-	-- put color [0.25,0.25,0.25] into mOutterShadowColor
+	-- put the color of my shadow paint into mOuterShadowColor
+	-- put color [0.25,0.25,0.25] into mOuterShadowColor
 
 	-- set the angle of mEffect to 90
 	-- set the spread of mEffect to 0
@@ -319,12 +331,12 @@ public handler OnSave(out rProperties as Array)
 	put mIconStyle into rProperties["iconStyle"]
 	put mCurrentRotation into rProperties["currentRotation"]
 
-	put colorToString(mOutterShadowColor, false) into rProperties["shadowColor"]
+	put colorToString(mOuterShadowColor, false) into rProperties["shadowColor"]
 	-- put "source over" into tProps["blend mode"]
 	-- put mShadowSpread into rProperties["effectSpread"]
-	put mOutterShadowSize into rProperties["shadowSize"]
-	put mOutterShadowDistance into rProperties["shadowDistance"]
-	put mOutterShadowAngle into rProperties["shadowAngle"]
+	put mOuterShadowSize into rProperties["shadowSize"]
+	put mOuterShadowDistance into rProperties["shadowDistance"]
+	put mOuterShadowAngle into rProperties["shadowAngle"]
 
 	redraw all
 end handler
@@ -337,11 +349,11 @@ public handler OnLoad(in pProperties as Array)
 	put pProperties["iconSize"] into mIconSize
 	put pProperties["iconStyle"] into mIconStyle
 	put pProperties["currentRotation"] into mCurrentRotation
-   put stringToColor(pProperties["shadowColor"]) into mOutterShadowColor
+   put stringToColor(pProperties["shadowColor"]) into mOuterShadowColor
 	-- put pProperties["DropShaowSpread"] into mShadowSpread
-	put pProperties["shadowSize"] into mOutterShadowSize
-	put pProperties["shadowDistance"] into mOutterShadowDistance
-	put pProperties["shadowAngle"] into mOutterShadowAngle
+	put pProperties["shadowSize"] into mOuterShadowSize
+	put pProperties["shadowDistance"] into mOuterShadowDistance
+	put pProperties["shadowAngle"] into mOuterShadowAngle
 
 	redraw all
 end handler
@@ -368,64 +380,62 @@ public handler OnMouseUp()
 	else
 		post "mouseRelease" with [the click button]
 	end if
-
 	redraw all
 end handler
 
 private variable mPrevMouseH as optional Number
 private variable mPrevMouseV as optional Number
 private variable mMouseDown as optional Boolean
+
 public handler OnMouseMove()
    if mMouseDown is not nothing and mMouseDown is true then
       variable tMouseH as Number
       variable tMouseV as Number
       variable tMouseLoc as List
-      -- variable tListOfNum as List
+      variable tDiff as Number
       execute script "return mouseLoc()"
-      -- put the result into tMouseLocStr
       split the result by "," into tMouseLoc
       parse tMouseLoc as list of number into tMouseLoc
       put tMouseLoc[1] into tMouseH
       put tMouseLoc[2] into tMouseV
       -- put the x of the mouse position / my pixel scale into tMouseH
       -- put the y of the mouse position / my pixel scale into tMouseV
-      variable tDiffH as Number
-      variable tDiffV as Number
-      put 0 into tDiffH
-      put 0 into tDiffV
-   -- if mPrevMouseH is not nothing then
-      if (tMouseH > mPrevMouseH) or (tMouseV > mPrevMouseV) then
-         put mPrevMouseV - tMouseH into tDiffH
-         put mPrevMouseH - tMouseV into tDiffV --  / my pixel scale
-         add (tDiffV - tDiffH) to mCurrentRotation
-         if mCurrentRotation > 290 then
-            put 290 into mCurrentRotation
-         end if
-         calculateRotatedPath(mWorkingPath, mCurrentRotation, mCenter, true)
-      -- if mPrevMouseH < tMouseH then -- moving left
-      --   log "right"
-      --else if mPrevMouseH > tMouseH then -- moving right
-      --   log "left"
-      -- end if
-      else if (tMouseH < mPrevMouseH) or (tMouseV < mPrevMouseV) then
-         put tMouseH - mPrevMouseH into tDiffH --/ my pixel scale
-         put tMouseV - mPrevMouseV into tDiffV
-         subtract (tDiffV - tDiffH) from mCurrentRotation
-         if mCurrentRotation < 0 then
-            put 0 into mCurrentRotation
-         end if
-         calculateRotatedPath(mWorkingPath, mCurrentRotation, mCenter, true)
-         -- log [ mCurrentRotation - (tDiffV - tDiffH)]
-      --if tMouseV < mPrevMouseV then -- moving up
-      --   log "up"
-      --else if tMouseV > mPrevMouseV then -- moving down
-      --   log "down"
-      --end if
+      if mPrevMouseH < tMouseH then -- moving right
+         --log "right"
+         put tMouseH - mPrevMouseH into tDiff
+         add tDiff to mCurrentRotation
+      else if mPrevMouseH > tMouseH then -- moving left
+         --log "left"
+         put mPrevMouseH - tMouseH into tDiff
+         subtract tDiff from mCurrentRotation
       end if
-      log mCurrentRotation
+      if tMouseV < mPrevMouseV then -- moving up
+         --log "up"
+         put mPrevMouseV - tMouseV into tDiff
+         add tDiff to mCurrentRotation
+      else if tMouseV > mPrevMouseV then -- moving down
+         --log "down"
+         put tMouseV - mPrevMouseV into tDiff
+         subtract tDiff from mCurrentRotation
+      end if
+      if mCurrentRotation > mMaxRotatiom then
+         put mMaxRotatiom into mCurrentRotation
+      end if
+      if mCurrentRotation < 0 then
+         put 0 into mCurrentRotation
+      end if
+      variable tDivisor as Number
+      variable tPercentage as Number
+      -- put trunc( 1.27 * ( lRotate / 2.9) ) into fld 1
+      put mMaxRotatiom / 100 into tDivisor
+      put mCurrentRotation / tDivisor into tPercentage
+      -- log [tPercentage]
+      setRotation(mCurrentRotation)
       put tMouseH into mPrevMouseH
       put tMouseV into mPrevMouseV
       redraw all
+      post "mouseMove" to my script object with [tMouseH,tMouseV] -- to my script object
+      post "knobTurned" to my script object with [tPercentage] -- to my script object
    end if
 end handler
 
@@ -457,11 +467,9 @@ end handler
 private handler initializationCalculations()
 	-- Always start with the shape at original position.
 	put mSVGPath into mWorkingPath
-
 	put preparePathForRotation(mSVGCircleBase, mIconOrigin, rectangle [0,0,mIconSize,mIconSize], my rectangle) into mCenter
 	put preparePathForRotation(mWorkingPath, mIconOrigin, rectangle [0,0,mIconSize,mIconSize], my rectangle) into mCenter
-
-	put 0 into mRotation
+	-- put 0 into mRotation
 end handler
 
 	----------
@@ -471,23 +479,23 @@ public handler OnPaint()
 	variable tProps as Array
 	put the empty array into tProps
 
-	-- put colorToString(mOutterShadowColor,false) into tProps["color"]
-   put mOutterShadowColor into tProps["color"]
-   put mOutterShadowAngle into tProps["angle"]
+	-- put colorToString(mOuterShadowColor,false) into tProps["color"]
+   put mOuterShadowColor into tProps["color"]
+   put mOuterShadowAngle into tProps["angle"]
 
 	-- put "source over" into tProps["blend mode"]
 	put 0 into tProps["spread"]
-	put mOutterShadowSize into tProps["size"]
-	put mOutterShadowDistance into tProps["distance"]
+	put mOuterShadowSize into tProps["size"]
+	put mOuterShadowDistance into tProps["distance"]
 
 	variable tEffect as Effect
 	put outer shadow effect with properties tProps into tEffect
 	-- put outer shadow effect into tEffect --> shadow (fix)
-   --set the color of tEffect to mOutterShadowColor -- color [0.0,1.0,0.0] --  color [0.7,0.7,0.7] -- tEffectColor
-   -- set the angle of tEffect to mOutterShadowAngle -- 90
+   --set the color of tEffect to mOuterShadowColor -- color [0.0,1.0,0.0] --  color [0.7,0.7,0.7] -- tEffectColor
+   -- set the angle of tEffect to mOuterShadowAngle -- 90
 	-- set the spread of tEffect to mShadowSpread
-	--set the size of tEffect to mOutterShadowSize
-	--set the distance of tEffect to mOutterShadowDistance
+	--set the size of tEffect to mOuterShadowSize
+	--set the distance of tEffect to mOuterShadowDistance
 
 	begin layer with tEffect on this canvas
 		set the paint of this canvas to solid paint with mFillColor-- color [1.0, 1.0, 1.0, 1.0]
