@@ -349,7 +349,7 @@ private handler _setIconStyle(in pStyle as String)
       	" c0.33-0.33,0.64-0.68,0.94-1.03l0.41,0.34l0.65-0.8l-0.4-0.33c0.29-0.37,0.56-0.75,0.81-1.13l0.44,0.28l0.55-0.88l-0.45-0.28" & \
       	" c0.24-0.4,0.47-0.81,0.67-1.22l0.47,0.22l0.43-0.94l-0.48-0.22c0.18-0.43,0.35-0.86,0.5-1.3l0.51,0.16l0.31-0.99l-0.49-0.15" & \
       	" c0.13-0.45,0.22-0.9,0.32-1.36l0.52,0.1l0.19-1.02l-0.52-0.1c0.07-0.46,0.14-0.92,0.18-1.38L39.64,21.48z" into mSVGCircleBase
-
+         scale mSVGCircleBase by [0.90,0.90]
       put path "M39.64,21.48l0.06-1.03l-0.53-0.03c0.01-0.46,0.01-0.93-0.01-1.39l0.53-0.04l-0.07-1.03l-0.52,0.04" & \
       	" c-0.04-0.46-0.12-0.92-0.2-1.38l0.52-0.1l-0.2-1.02l-0.51,0.1c-0.1-0.45-0.21-0.9-0.34-1.35l0.49-0.16l-0.33-0.98l-0.5,0.17" & \
       	" c-0.16-0.44-0.33-0.87-0.52-1.29l0.47-0.23l-0.45-0.93l-0.47,0.23c-0.21-0.41-0.45-0.81-0.69-1.21l0.45-0.29l-0.56-0.87l-0.43,0.28" & \
@@ -394,7 +394,7 @@ public handler OnCreate()
 	-- put [0.50,0.50] into mIconOrigin
 	put 120 into mIconSize
 	-- put 90 into mRotation
-	put color [0.9, 0.9, 0.9, 1.0] into mFillColor
+	-- put color [0.9, 0.9, 0.9, 1.0] into mFillColor
 	-- put outer shadow effect into tEffect
 
    put color [0.1, 0.1, 0.1] into mOuterShadowColor
@@ -598,12 +598,23 @@ public handler OnPaint()
 	--set the size of tEffect to mOuterShadowSize
 	--set the distance of tEffect to mOuterShadowDistance
 	begin layer with tEffect on this canvas
-		set the paint of this canvas to solid paint with mFillColor-- color [1.0, 1.0, 1.0, 1.0]
+		set the paint of this canvas to solid paint with mOuterShadowColor -- color [1.0, 1.0, 1.0, 1.0]
+      put inner shadow effect with properties tProps into tEffect
+      put 15 into tProps["size"]
+      put 180 - mOuterShadowAngle into tProps["angle"]
+      put mOuterShadowDistance into tProps["distance"]
 		fill mWorkingBasePath on this canvas
+         begin layer with tEffect on this canvas
+            set the paint of this canvas to solid paint with color mFillColor -- color [1.0, 1.0, 1.0, 1.0]
+            fill mWorkingBasePath on this canvas
+         end layer on this canvas
+   end layer on this canvas
+
+   -- set the paint of this canvas to solid paint with mFillColor -- color [1.0, 1.0, 1.0, 1.0]
+   -- set the stroke width of this canvas to 2
+   -- stroke mWorkingBasePath on this canvas
+   -- fill mWorkingBasePath on this canvas
       -- set the paint of this canvas to solid paint with color [0, 0, 0, 1.0]
-      -- set the stroke width of this canvas to 8
-      stroke mWorkingBasePath on this canvas
-	end layer on this canvas
 	set the paint of this canvas to solid paint with mSVGPathColor
 	fill mWorkingPath on this canvas
 end handler
