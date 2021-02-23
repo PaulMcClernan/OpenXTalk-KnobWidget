@@ -1,0 +1,9 @@
+on mouseDown pButtonNumber
+   put "180,60,30,5,2.5,1,0.5,0.25,0.125,0" into tSkewList
+   repeat with x = 1 to 10
+      set the skewVarA of widget "Image Tester" to (item x of tSkewList)
+      set the skewVarB of widget "Image Tester" to (item x of tSkewList)
+
+      wait 0.1 seconds -- with messages
+   end repeat
+end mouseDown

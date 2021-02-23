@@ -1,0 +1,386 @@
+/*
+
+This widget rounds corners.
+
+*/
+
+widget community.livecode.paulmcclernan.imagetester
+
+	use com.livecode.canvas
+	use com.livecode.widget
+	use com.livecode.math
+
+	metadata title is "Image Tester"
+	metadata author is "Paul McClernan"
+	metadata version is "1.0.0"
+	metadata preferredSize is "150,150"
+	metadata svgicon is "M0.000000 15.000000C-0.000001 6.715731 6.715729 0.000000 15.000000 0.000000L113.000000 0.000000C121.284271 0.000000 128.000000 6.715729 128.000000 15.000000L128.000000 17.000000C128.000000 25.284271 121.284271 32.000000 113.000000 32.000000L15.000000 32.000000C6.715728 32.000000-0.000001 25.284271 0.000000 16.999998L0.000000 15.000000Z"
+
+	-- public
+	private variable mRadius            as Number
+	private variable mRoundTopLeft      as Boolean
+	private variable mRoundTopRight     as Boolean
+	private variable mRoundBottomRight  as Boolean
+	private variable mRoundBottomLeft   as Boolean
+	private variable mImagePath         as String
+	private variable mResizeQuality     as String
+
+	-- private
+	private variable mPath              as Path
+	private variable mImage             as optional Image
+	private variable mPaint             as optional Paint
+
+	property filename                   get mImagePath          set setImagePath
+	metadata filename.editor is "com.livecode.pi.file"
+
+	property "radius"                   get mRadius             set setRadius
+	property roundTopLeft               get mRoundTopLeft       set setRoundTopLeft
+	property roundTopRight              get mRoundTopRight      set setRoundTopRight
+	property roundBottomRight           get mRoundBottomRight   set setRoundBottomRight
+	property roundBottomLeft            get mRoundBottomLeft    set setRoundBottomLeft
+	property formattedWidth             get getImageWidth
+	property formattedHeight            get getImageHeight
+
+	property resizeQuality					get getResizeQuality    set setResizeQuality
+	metadata resizeQuality.editor is "com.livecode.pi.enum"
+	metadata resizeQuality.options is "none,low,medium,high"
+	metadata resizeQuality.default is "medium"
+
+	metadata backgroundColor.editor is "com.livecode.pi.color"
+	metadata backgroundColor.default is "255,0,0"
+	metadata backgroundcolor.section is "Colors"
+
+	private handler setRadius(in pRadius as Number)
+		put max(pRadius, 0) into mRadius
+		redraw all
+	end handler
+
+	private handler getResizeQuality() returns String
+		return mResizeQuality
+	end handler
+
+	private handler setResizeQuality(in pQuality as String)
+		if not ["none","low","medium","high"] contains [pQuality] then
+			put "medium" into pQuality
+		end if
+		put pQuality into mResizeQuality
+	end handler
+
+	private handler setImagePath(in pPath as String)
+		put pPath into mImagePath
+		loadImage()
+		redraw all
+	end handler
+
+	private handler getImageWidth() returns Integer
+		if mImage is nothing then
+			return 0
+		else
+			return the width of mImage
+		end if
+	end handler
+
+	private handler getImageHeight() returns Integer
+		if mImage is nothing then
+			return 0
+		else
+			return the height of mImage
+		end if
+	end handler
+
+	private handler setRoundTopLeft(in pBoolean as Boolean)
+	  put pBoolean into mRoundTopLeft
+	  redraw all
+	end handler
+
+	private handler setRoundTopRight(in pBoolean as Boolean)
+	  put pBoolean into mRoundTopRight
+	  redraw all
+	end handler
+
+	private handler setRoundBottomRight(in pBoolean as Boolean)
+	  put pBoolean into mRoundBottomRight
+	  redraw all
+	end handler
+
+	private handler setRoundBottomLeft(in pBoolean as Boolean)
+	  put pBoolean into mRoundBottomLeft
+	  redraw all
+	end handler
+
+	private variable mTransMatrixVarA as Number
+	property transformMatrixVarA            get mTransMatrixVarA    set setTransformMatrixVarA
+		metadata transformMatrixVarA.default is "1"
+			metadata transformMatrixVarA.editor is "com.livecode.pi.number"
+	private handler setTransformMatrixVarA(in pVar as Number)
+	  put pVar into mTransMatrixVarA
+	  redraw all
+	end handler
+	private variable mTransMatrixVarB as Number
+	property transformMatrixVarB           get mTransMatrixVarB    set setTransformMatrixVarB
+		metadata transformMatrixVarB.default is "0"
+			metadata transformMatrixVarB.editor is "com.livecode.pi.number"
+	private handler setTransformMatrixVarB(in pVar as Number)
+	  put pVar into mTransMatrixVarB
+	  redraw all
+	end handler
+	private variable mTransMatrixVarC as Number
+	property transformMatrixVarC           get mTransMatrixVarC    set setTransformMatrixVarC
+		metadata transformMatrixVarC.default is "0"
+			metadata transformMatrixVarC.editor is "com.livecode.pi.number"
+	private handler setTransformMatrixVarC(in pVar as Number)
+	  put pVar into mTransMatrixVarC
+	  redraw all
+	end handler
+	private variable mTransMatrixVarD as Number
+	property transformMatrixVarD            get mTransMatrixVarD    set setTransformMatrixVarD
+		metadata transformMatrixVarD.default is "1"
+			metadata transformMatrixVarD.editor is "com.livecode.pi.number"
+	private handler setTransformMatrixVarD(in pVar as Number)
+	  put pVar into mTransMatrixVarD
+	  redraw all
+	end handler
+	private variable mTransMatrixVarE as Number
+	property transformMatrixVarE            get mTransMatrixVarE    set setTransformMatrixVarE
+		metadata transformMatrixVarE.default is "0"
+			metadata transformMatrixVarE.editor is "com.livecode.pi.number"
+	private handler setTransformMatrixVarE(in pVar as Number)
+	  put pVar into mTransMatrixVarE
+	  redraw all
+	end handler
+	private variable mTransMatrixVarF as Number
+	property transformMatrixVarF            get mTransMatrixVarF    set setTransformMatrixVarF
+		metadata transformMatrixVarF.default is "0"
+			metadata transformMatrixVarF.editor is "com.livecode.pi.number"
+	private handler setTransformMatrixVarF(in pVar as Number)
+	  put pVar into mTransMatrixVarF
+	  redraw all
+	end handler
+
+	private variable mSkewVarA as Number
+	property skewVarA            get mSkewVarA    set setSkewVarA
+		metadata skewVarA.default is "0"
+			metadata skewVarA.editor is "com.livecode.pi.number"
+	private handler setSkewVarA(in pVar as Number)
+	  put pVar into mSkewVarA
+	  redraw all
+	end handler
+	private variable mSkewVarB as Number
+	property skewVarB           get mSkewVarB    set setSkewVarB
+		metadata skewVarB.default is "0"
+			metadata skewVarB.editor is "com.livecode.pi.number"
+	private handler setSkewVarB(in pVar as Number)
+	  put pVar into mSkewVarB
+	  redraw all
+	end handler
+
+	private variable mRotation as Number
+	property "rotation"            get mRotation    set setRotation
+	metadata rotation.editor is "com.livecode.pi.number"
+	metadata rotation.default is "0"
+	private handler setRotation(in pVar as Number)
+	  put pVar into mRotation
+	  redraw all
+	end handler
+
+	public handler OnCreate()
+		put 15 into mRadius
+		put the empty path into mPath
+		put "" into mImagePath
+		put true into mRoundTopLeft
+		put true into mRoundTopRight
+		put true into mRoundBottomRight
+		put true into mRoundBottomLeft
+		put "medium" into mResizeQuality
+		put nothing into mImage
+		put nothing into mPaint
+		put 1 into mTransMatrixVarA
+		put 0 into mTransMatrixVarB
+		put 0 into mTransMatrixVarC
+		put 1 into mTransMatrixVarD
+		put 0 into mTransMatrixVarE
+		put 0 into mTransMatrixVarF
+		put 0 into mSkewVarA
+		put 0 into mSkewVarB
+		put 0 into mRotation
+	end handler
+
+
+	public handler OnSave(out rProperties as Array)
+		put the empty array into rProperties
+
+		put mRadius into rProperties["radius"]
+		put mImagePath into rProperties["filename"]
+		put mRoundTopLeft into rProperties["roundTopLeft"]
+		put mRoundTopRight into rProperties["roundTopRight"]
+		put mRoundBottomRight into rProperties["roundBottomRight"]
+		put mRoundBottomLeft into rProperties["roundBottomLeft"]
+		put mResizeQuality into rProperties["resizeQuality"]
+	end handler
+
+
+	public handler OnLoad(in pProperties as Array)
+		put pProperties["radius"] into mRadius
+		put pProperties["filename"] into mImagePath
+		put pProperties["roundTopLeft"] into mRoundTopLeft
+		put pProperties["roundTopRight"] into mRoundTopRight
+		put pProperties["roundBottomRight"] into mRoundBottomRight
+		put pProperties["roundBottomLeft"] into mRoundBottomLeft
+		put pProperties["resizeQuality"] into mResizeQuality
+	end handler
+
+
+	public handler OnOpen()
+		loadImage()
+	end handler
+
+
+	public handler OnGeometryChanged()
+		redraw all
+	end handler
+
+	public handler OnMouseUp()
+		if the mouse position is within my bounds then
+			post "mouseUp" to my script object with [the click button formatted as string] -- formatint needed until dp-2
+		else
+			post "mouseRelease" to my script object with [the click button formatted as string] -- formatint needed until dp-2
+		end if
+	end handler
+
+
+	public handler OnMouseCancel()
+		post "mouseRelease" to my script object with [the click button formatted as string] -- formatint needed until dp-2
+	end handler
+
+
+	public handler OnMouseDown()
+		post "mouseDown" to my script object with [the click button formatted as string]
+	end handler
+
+
+	private handler loadImage() returns nothing
+		put nothing into mImage
+
+		if mImagePath is not empty then
+			put image from file mImagePath into mImage
+		end if
+	end handler
+
+-- private handler createImagePaint() returns nothing
+--	if mImage is not nothing then
+--		put pattern with mImage into mPaint
+--		scale mPaint by [my width/the width of mImage, my height/the height of mImage]
+--	end if
+-- end handler
+	----------
+-- called whenever LiveCode needs to redraw the widget
+public handler OnPaint()
+
+	if mImage is not nothing then
+		set the image resize quality of this canvas to mResizeQuality
+		-- variable tImage
+		-- put image from file "images/backgroundpattern.png" into tImage
+		--put pattern with mImage rotated by mRotation into mPaint
+		-- scale mImage by [my width * 0.25, my height * 0.75]
+		-- put pattern with mImage rotated by mRotation into mPaint
+		-- put pattern with mImage into mPaint
+		--- Set up the pattern transform
+		variable tTransform
+		variable tPoint as Point
+
+		put rounded rectangle path of rectangle [0,0,the width of mImage,the height of mImage] with radii [mRadius,mRadius] into mPath
+		put point [my width *.5, my height * .5] into tPoint
+		-- put transform from matrix [0,2,-2,0,0,0] into tTransform
+		put rotatedTransformation(mRotation,tPoint,true) into tTransform
+		put pattern with mImage transformed by tTransform into mPaint
+		transform mPath by tTransform
+ 	   --	scale mPaint by [my width * 0.5, my height * 0.5]
+		-- scale mPath by [my width * 0.5, my height * 0.5]
+		scale mPaint by [ (my width / the width of mImage) * 0.5 , (my height  / the height of mImage) * 0.5 ]
+		scale mPath by [  (my width / the width of mImage) * 0.5 , (my height  / the height of mImage) * 0.5 ]
+		-- scale mPaint by [the width of mImage / 2, the height of mImage / 2 ]
+		-- scale mPath by [my width/4, my height/4]
+		-- translate mPaint by [my width * 0.25 / the width of mImage * 0.25, my height * 0.25 / the height of mImage * 0.25]
+		--translate mPaint by [ (my width / the width of mImage) * 0.5 , (my height  / the height of mImage) * 0.5 ]
+		--translate mPath by [ (my width / the width of mImage) * 0.5 , (my height  / the height of mImage) * 0.5 ]
+
+
+		-- translate mPaint by [my width * 0.25, my height * 0.25]
+		--translate mPath by [my width * 0.25, my height * 0.25 ]
+
+		-- translate mPaint by [my width / the width of mImage * .5, my height / the height of mImage * .5]
+		-- translate mPath by [my width * .25, my height *.25]
+		-- ScaleX, SkewX, TransX, SkewY, ScaleY, TransY, Persp0, Persp1, and Persp2.
+		-- transform mPaint by transform with matrix [mTransMatrixVarA,mTransMatrixVarB,mTransMatrixVarC,mTransMatrixVarD,mTransMatrixVarE,mTransMatrixVarF]
+		-- transform mPath by transform with matrix [mTransMatrixVarA,mTransMatrixVarB,mTransMatrixVarC,mTransMatrixVarD,mTransMatrixVarE,mTransMatrixVarF]
+
+		-- put the identity transform into tTransform
+		skew tTransform by [mSkewVarA, mSkewVarB]
+
+		transform mPaint by tTransform
+		transform mPath by tTransform
+
+		set the paint of this canvas to mPaint
+		fill mPath on this canvas
+		-- rotate this canvas by mRotation
+		-- scale mImage by [(my width /4)/ the width of mImage, my height /4 /the height of mImage]
+		-- scale mImage by [my width /2, my height /2]
+		-- transform mImage by tTransform
+		-- draw mImage into rectangle [my width * .25,my height *.25, the width of mImage,the height of mImage] of this canvas
+		-- draw mImage into rectangle [my width * .25,my height *.25, my width * .75, my height *.75] of this canvas
+		--  draw mImage into mPath of this canvas
+		-- rotate this canvas by mRotation
+		-- 	draw mImage into rectangle [0,my height *.25, my width * .75, my height *.75] of this canvas
+		-- draw from rectangle[0,0,the width of mImage,the height of mImage] of mImage into rectangle [the width of mImage *.25, the height of mImage* .25, the width of mImage *.75, the height of mImage* .75] of this canvas
+	else
+		put rounded rectangle path of rectangle [my width *.25, my height * .25, my width * .75, my height * .75] with radii [30,30] into mPath
+		put my background paint into mPaint
+		set the paint of this canvas to mPaint
+		fill mPath on this canvas
+	end if
+end handler
+
+public handler OnClose()
+
+end handler
+
+
+public handler rotatedTransformation(in pRotation as Number, in pCenter as Point, in pRotateClockwise as Boolean) returns Transform
+  variable tX as Number
+  variable tY as Number
+  variable tOriginX as Number
+  variable tOriginY as Number
+  variable tMatrix as List
+  variable tA as Number
+  variable tB as Number
+  variable tC as Number
+  variable tD as Number
+
+  -- Clockwise: sin for B, -sin for C
+  -- Counterclockwise: -sin for B, sin for C
+  variable tAngle as Number
+  put (pRotation mod 360)/360*2*pi into tAngle
+
+  put cos(tAngle) into tA -- scale the x
+
+  if pRotateClockwise then
+     put sin(tAngle) into tB -- scale the y
+     put -sin(tAngle) into tC -- skew the x
+  else
+     put -sin(tAngle) into tB -- scale the y
+     put sin(tAngle) into tC -- skew the x
+  end if
+  put cos(tAngle) into tD -- skew the y
+  put the x of pCenter into tOriginX
+  put the y of pCenter into tOriginY
+
+  put tOriginX - tOriginX*tA - tOriginY*tC into tX
+  put tOriginY - tOriginX*tB - tOriginY*tD into tY
+
+  variable tTransform as Transform
+  put transform with matrix [tA,tB,tC,tD,tX,tY] into tTransform
+
+  return tTransform
+end handler
+
+end widget

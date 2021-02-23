@@ -394,7 +394,7 @@ public handler OnCreate()
 	-- put [0.50,0.50] into mIconOrigin
 	put 120 into mIconSize
 	-- put 90 into mRotation
-	put color [0.9, 0.9, 0.9, 1.0] into mFillColor
+	-- put color [0.9, 0.9, 0.9, 1.0] into mFillColor
 	-- put outer shadow effect into tEffect
 
    put color [0.1, 0.1, 0.1] into mOuterShadowColor
@@ -604,15 +604,16 @@ public handler OnPaint()
       put 180 - mOuterShadowAngle into tProps["angle"]
       put mOuterShadowDistance into tProps["distance"]
 		fill mWorkingBasePath on this canvas
+         begin layer with tEffect on this canvas
+            set the paint of this canvas to solid paint with color mFillColor -- color [1.0, 1.0, 1.0, 1.0]
+            fill mWorkingBasePath on this canvas
+         end layer on this canvas
    end layer on this canvas
-   begin layer with tEffect on this canvas
-      set the paint of this canvas to solid paint with color [1.0,1.0,1.0,0.5 ] -- mFillColor
-      fill mWorkingBasePath on this canvas
-   end layer on this canvas
-   set the paint of this canvas to solid paint with mFillColor -- color [1.0, 1.0, 1.0, 1.0]
+
+   -- set the paint of this canvas to solid paint with mFillColor -- color [1.0, 1.0, 1.0, 1.0]
    -- set the stroke width of this canvas to 2
    -- stroke mWorkingBasePath on this canvas
-   fill mWorkingBasePath on this canvas
+   -- fill mWorkingBasePath on this canvas
       -- set the paint of this canvas to solid paint with color [0, 0, 0, 1.0]
 	set the paint of this canvas to solid paint with mSVGPathColor
 	fill mWorkingPath on this canvas
@@ -731,12 +732,12 @@ end handler
 -- Very useful article: http://docs.rainmeter.net/tips/transformation-matrix-guide
 public handler calculateRotatedPath(inout pPath as Path, in pRotation as Number, in pCenter as Point, in pRotateClockwise as Boolean)
    variable tTransform as Transform
-   put rotatedTransformation(pRotation, pCenter, pRotateClockwise) into tTransform
+   put rotatedPathTransformation(pRotation, pCenter, pRotateClockwise) into tTransform
    transform pPath by tTransform
 end handler
 
 
-public handler rotatedTransformation(in pRotation as Number, in pCenter as Point, in pRotateClockwise as Boolean) returns Transform
+public handler rotatedPathTransformation(in pRotation as Number, in pCenter as Point, in pRotateClockwise as Boolean) returns Transform
   variable tX as Number
   variable tY as Number
   variable tOriginX as Number
