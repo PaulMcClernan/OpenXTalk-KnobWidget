@@ -41,7 +41,7 @@ Name: outerShadowColor
 Type: property
 
 */
-widget community.livecode.paulmcclernan.knob
+widget org.openxtalk.knob
 
 use com.livecode.canvas
 use com.livecode.widget
